@@ -776,33 +776,92 @@
         setTimeout(function () { self.fitView(); }, 90);
     };
 
-    FamilyTreeSVG.prototype.exportSVG = function () {
+    FamilyTreeSVG.prototype.exportSVG = function (options) {
+        options = options || {};
+        var bgColor = options.background !== undefined ? options.background : "#ffffff";
+
         var clone = this._els.svg.cloneNode(true);
-        clone.removeAttribute('style');
-        var vpClone = clone.children[0]?.children[1] ? clone.children[0] : clone.querySelector('g');
-        // Remove bg
-        if (vpClone && vpClone.children[0]) vpClone.children[0].remove();
-        clone.querySelectorAll('.collapse-btn').forEach(function (el) { el.remove(); });
-        if (vpClone) vpClone.removeAttribute('transform');
-        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        clone.style.position = 'absolute'; clone.style.top = '-9999px'; clone.style.left = '-9999px'; clone.style.visibility = 'hidden';
+        clone.removeAttribute("style");
+
+        // Locate main viewport <g> (the container of the tree)
+        var vpClone = Array.from(clone.children).find(function (el) {
+            return el.tagName && el.tagName.toLowerCase() === "g";
+        }) || clone.querySelector("g");
+
+        // Remove pan/zoom transform so geometry is unscaled in its base coordinate space
+        if (vpClone) {
+            vpClone.removeAttribute("transform");
+        }
+
+        // Remove collapse buttons (+ / -) from export
+        clone.querySelectorAll(".collapse-btn").forEach(function (el) { el.remove(); });
+
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+        clone.style.position = "absolute";
+        clone.style.top = "-99999px";
+        clone.style.left = "-99999px";
+        clone.style.visibility = "hidden";
         document.body.appendChild(clone);
-        var bbox = { x: 0, y: 0, width: this._SVG_W, height: this._SVG_H };
-        try { bbox = vpClone.getBBox(); } catch (e) {}
+
+        var bbox = null;
+        if (vpClone && typeof vpClone.getBBox === "function") {
+            try {
+                var b = vpClone.getBBox();
+                if (b && b.width > 20 && b.height > 20 && !isNaN(b.x) && !isNaN(b.y)) {
+                    bbox = b;
+                }
+            } catch (e) {}
+        }
         document.body.removeChild(clone);
-        var p = 40;
-        var vx = bbox.x - p, vy = bbox.y - p, vw = bbox.width + p * 2, vh = bbox.height + p * 2;
-        if (isNaN(vx) || vw <= 0) { vx = 0; vy = 0; vw = this._SVG_W; vh = this._SVG_H; }
-        clone.setAttribute('viewBox', vx + ' ' + vy + ' ' + vw + ' ' + vh);
-        clone.setAttribute('width', vw); clone.setAttribute('height', vh);
-        clone.style.position = ''; clone.style.top = ''; clone.style.left = ''; clone.style.visibility = '';
+
+        var p = 60;
+        var vx, vy, vw, vh;
+        if (bbox) {
+            vx = Math.round(bbox.x - p);
+            vy = Math.round(bbox.y - p);
+            vw = Math.round(bbox.width + p * 2);
+            vh = Math.round(bbox.height + p * 2);
+        } else {
+            vx = 0;
+            vy = 0;
+            vw = Math.round(this._SVG_W || 3000);
+            vh = Math.round(this._SVG_H || 2200);
+        }
+
+        // Add solid background so it does not render black/transparent in image viewers
+        if (bgColor && bgColor !== "transparent" && bgColor !== "none") {
+            var bgRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            bgRect.setAttribute("x", vx);
+            bgRect.setAttribute("y", vy);
+            bgRect.setAttribute("width", vw);
+            bgRect.setAttribute("height", vh);
+            bgRect.setAttribute("fill", bgColor);
+            if (vpClone) {
+                clone.insertBefore(bgRect, vpClone);
+            } else {
+                clone.appendChild(bgRect);
+            }
+        }
+
+        clone.setAttribute("viewBox", vx + " " + vy + " " + vw + " " + vh);
+        clone.setAttribute("width", vw);
+        clone.setAttribute("height", vh);
+        clone.style.position = "";
+        clone.style.top = "";
+        clone.style.left = "";
+        clone.style.visibility = "";
+
         var s = new XMLSerializer().serializeToString(clone);
-        if (!s.startsWith('<?xml')) s = '<?xml version="1.0" standalone="no"?>\r\n' + s;
-        var blob = new Blob([s], { type: 'image/svg+xml;charset=utf-8' });
+                if (!s.startsWith('<?xml')) s = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\r\n' + s;
+        var blob = new Blob([s], { type: "image/svg+xml;charset=utf-8" });
         var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.download = ((this._ROOT.family_name || this._ROOT.full_name || 'family') + '_tree.svg').toLowerCase().replace(/\s+/g, '_');
-        a.href = url; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        var a = document.createElement("a");
+        a.download = ((this._ROOT.family_name || this._ROOT.full_name || "family") + "_tree.svg").toLowerCase().replace(/\s+/g, "_");
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
 

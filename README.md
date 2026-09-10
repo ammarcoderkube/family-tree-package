@@ -1,10 +1,9 @@
 # family-tree-svg
 
-> Pure organic SVG family tree visualization from JSON data — with leaves, branches, trunk, customizable colors, pan/zoom, and export.
+![Family Tree SVG](https://raw.githubusercontent.com/ammarcoderkube/family-tree-package/main/assets/preview.png)
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ammarcoderkube/family-tree-package/main/assets/preview.png" alt="Family Tree SVG Preview" width="100%">
-</p>
+Pure organic SVG family tree visualization from JSON data — with leaves, branches, trunk, customizable colors, pan/zoom, and export.
+
 
 ## Features
 
