@@ -1,9 +1,45 @@
 # family-tree-svg
 
-![Family Tree SVG](https://raw.githubusercontent.com/ammarcoderkube/family-tree-package/main/assets/preview.png)
+<p align="center">
+  <img src="./assets/khan_tree_1.svg" alt="Family Tree SVG — Main Showcase" width="100%" />
+</p>
 
 Pure organic SVG family tree visualization from JSON data — with leaves, branches, trunk, customizable colors, pan/zoom, and export.
 
+---
+
+### 🎨 Color Themes & Palettes
+
+Dynamic coordinated color presets and full custom hex support:
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>🌸 Cherry Blossom</b><br/><br/>
+      <img src="./assets/khan_tree_2.svg" alt="Cherry Blossom Theme" width="100%"/><br/>
+      <code>leaf: #a35c6a</code> &bull; <code>branch: #5e3b25</code> &bull; <code>trunk: #4a2c16</code>
+    </td>
+    <td align="center" width="50%">
+      <b>🍂 Golden Autumn</b><br/><br/>
+      <img src="./assets/khan_tree_3.svg" alt="Golden Autumn Theme" width="100%"/><br/>
+      <code>leaf: #dfa467</code> &bull; <code>branch: #4d2b1a</code> &bull; <code>trunk: #3d1d11</code>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>❄️ Winter Pine</b><br/><br/>
+      <img src="./assets/khan_tree_4.svg" alt="Winter Pine Theme" width="100%"/><br/>
+      <code>leaf: #2a6b5c</code> &bull; <code>branch: #2d3e50</code> &bull; <code>trunk: #1f2937</code>
+    </td>
+    <td align="center" width="50%">
+      <b>🌅 Sunset Clay</b><br/><br/>
+      <img src="./assets/khan_tree_5.svg" alt="Sunset Clay Theme" width="100%"/><br/>
+      <code>leaf: #d67b45</code> &bull; <code>branch: #4d2b1a</code> &bull; <code>trunk: #2d1607</code>
+    </td>
+  </tr>
+</table>
+
+---
 
 ## Features
 
