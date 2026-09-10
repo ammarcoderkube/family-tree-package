@@ -144,9 +144,16 @@
             this._collapsed = {};
             this._autoCollapse(d);
             this.render();
-            this.fitView();
             var self = this;
-            setTimeout(function () { self.fitView(); }, 90);
+            this.fitView(false);
+            if (typeof requestAnimationFrame !== 'undefined') {
+                requestAnimationFrame(function () {
+                    self.fitView(false);
+                    setTimeout(function () { self.fitView(false); }, 60);
+                });
+            } else {
+                setTimeout(function () { self.fitView(false); }, 60);
+            }
         }
     }
 
@@ -324,12 +331,9 @@
         node._sw = Math.max(1, s);
     };
 
-    FamilyTreeSVG.prototype._pass2 = function (node, startX, startY, endX, endY, angle, depth, minAng, maxAng) {
+    FamilyTreeSVG.prototype._pass2 = function (node, startX, startY, endX, endY, angle, depth) {
         node._sx = startX; node._sy = startY; node._x = endX; node._y = endY;
         node._angle = angle; node._depth = depth;
-
-        if (minAng === undefined) minAng = -78;
-        if (maxAng === undefined) maxAng = 78;
 
         var kids = this._collapsed[node.id] ? [] : (node.children || []);
         if (!kids.length) return;
@@ -341,7 +345,7 @@
 
         // Position partner nodes as attached companion leaves
         partners.forEach(function (p, idx) {
-            var pOffset = angle < -10 ? -36 : (angle > 10 ? 36 : (idx % 2 === 0 ? -32 : 32));
+            var pOffset = angle < -10 ? -32 : (angle > 10 ? 32 : (idx % 2 === 0 ? -30 : 30));
             var pAng = angle + pOffset;
             var pDist = 58;
             var pRad = (pAng - 90) * Math.PI / 180;
@@ -355,63 +359,82 @@
 
         if (!realKids.length) return;
 
-        var depthIdx = Math.min(depth + 1, self._BR_LEN.length - 1);
+        var depthIdx = Math.min(depth + 1, self._SPREAD.length - 1);
         var baseBranchLen = self._BR_LEN[depthIdx] || 85;
-
         var totalSW = 0;
         realKids.forEach(function (k) { totalSW += k._sw; });
 
-        var span = maxAng - minAng;
+        // Fan spread: broad and lush at base, naturally proportioned in sub-branches
+        var totalSpread;
+        if (depth === 0) {
+            // Main boughs: spread across 130° to 155° for a full, majestic canopy base
+            totalSpread = Math.min(155, Math.max(120, (self._SPREAD[1] || 220) * 0.68));
+        } else {
+            // Sub-branches: fan proportionally around parent's upward direction
+            // Capped at 92° to ensure branches never cross opposite quadrants
+            var baseSp = self._SPREAD[depthIdx] || 75;
+            totalSpread = Math.min(92, Math.max(38, baseSp * 0.55 + Math.pow(totalSW, 0.32) * 16));
+        }
 
-        // Single child: branch continues along parent's path within its cone
+        if (realKids.length < 3 && depth > 0) {
+            totalSpread = Math.min(85, totalSpread * 1.25);
+        }
+
+        // Pull child branches upwards naturally by scaling the parent's angle
+        var centerAngle = depth === 0 ? angle : angle * 0.65;
+        var startAngle = centerAngle - totalSpread / 2;
+
         if (realKids.length === 1) {
             var k = realKids[0];
-            var kidAngle = angle * 0.90 + (rng(k.id, 'j') - 0.5) * 4;
-            kidAngle = Math.max(minAng + 2, Math.min(maxAng - 2, kidAngle));
-            var swMul = Math.max(0.92, Math.min(1.22, Math.pow(k._sw, 0.22)));
-            var lenVar = baseBranchLen * (0.94 + rng(k.id, 'l') * 0.14) * swMul;
+            var kidAngle = centerAngle + (rng(k.id, 'j') - 0.5) * 6;
+            kidAngle = Math.max(-82, Math.min(82, kidAngle));
+            var swMul = Math.max(0.92, Math.min(1.24, Math.pow(k._sw, 0.22)));
+            var lenVar = baseBranchLen * (0.92 + rng(k.id, 'l') * 0.18) * swMul;
             var rad = (kidAngle - 90) * Math.PI / 180;
             var kex = endX + Math.cos(rad) * lenVar;
             var key = endY + Math.sin(rad) * lenVar;
             var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
             if (key > limitY) key = limitY;
-            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1, minAng, maxAng);
+            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1);
             return;
         }
 
-        // Multiple children: partition [minAng, maxAng] proportionally so branches never cross
-        var buffer = Math.min(4, span / (realKids.length * 5));
-        var usableSpan = Math.max(10, span - buffer * (realKids.length - 1));
-        var curMin = minAng;
-
+        var offset = 0;
         realKids.forEach(function (k) {
             var frac = k._sw / totalSW;
-            var kSpan = usableSpan * frac;
-            var kMin = curMin;
-            var kMax = kMin + kSpan;
-            curMin = kMax + buffer;
+            var kidAngle = startAngle + (offset + frac * 0.5) * totalSpread;
+            offset += frac;
 
-            var kidAngle = (kMin + kMax) / 2;
-            var jitterLimit = Math.min(3.5, kSpan * 0.15);
-            kidAngle += (rng(k.id, 'j') - 0.5) * jitterLimit;
-            kidAngle = Math.max(kMin + 1, Math.min(kMax - 1, kidAngle));
+            // Organic angular jitter
+            kidAngle += (rng(k.id, 'j') - 0.5) * 6;
+            kidAngle = Math.max(-82, Math.min(82, kidAngle));
 
-            var swMul = Math.max(0.90, Math.min(1.22, Math.pow(k._sw, 0.22)));
-            var lenVar = baseBranchLen * (0.92 + rng(k.id, 'l') * 0.16) * swMul;
+            var swMul = Math.max(0.90, Math.min(1.25, Math.pow(k._sw, 0.22)));
+            var lenVar = baseBranchLen * (0.88 + rng(k.id, 'l') * 0.24) * swMul;
             var rad = (kidAngle - 90) * Math.PI / 180;
             var kex = endX + Math.cos(rad) * lenVar;
             var key = endY + Math.sin(rad) * lenVar;
             var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
             if (key > limitY) key = limitY;
 
-            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1, kMin, kMax);
+            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1);
         });
     };
 
     FamilyTreeSVG.prototype._resolveOverlaps = function () {
         var nodes = Object.values(this._nodeMap);
         var LW = this._LW, ROOT = this._ROOT;
-        for (var it = 0; it < 60; it++) {
+        var iterations = 75;
+
+        // Wide dome ellipse constraint for a lush, balanced rounded canopy edge
+        var N = nodes.length;
+        var R = Math.max(520, Math.min(1200, Math.sqrt(N) * 135));
+        var rx = R * 1.55;  // wide horizontally for dome shape
+        var ry = R * 0.88;  // tall vertically to cover canopy
+        var canopyCenterX = ROOT._x;
+        var canopyCenterY = ROOT._y - ry * 0.52;
+
+        for (var it = 0; it < iterations; it++) {
             var moved = false;
             for (var j = 0; j < nodes.length; j++) {
                 for (var k = j + 1; k < nodes.length; k++) {
@@ -420,31 +443,58 @@
 
                     var dx = n1._x - n2._x, dy = n1._y - n2._y;
                     var d2 = dx * dx + dy * dy;
-                    var sc1 = n1._gen === 0 ? 1.4 : n1._gen === 1 ? 1.15 : n1._gen === 2 ? 1.0 : 0.88;
-                    var sc2 = n2._gen === 0 ? 1.4 : n2._gen === 1 ? 1.15 : n2._gen === 2 ? 1.0 : 0.88;
-                    if (n1._isPartner) sc1 *= 0.82;
-                    if (n2._isPartner) sc2 *= 0.82;
-                    var r1 = LW * sc1 * 0.58;
-                    var r2 = LW * sc2 * 0.58;
+                    var sc1 = n1._gen === 0 ? 1.45 : n1._gen === 1 ? 1.18 : n1._gen === 2 ? 1.02 : 0.90;
+                    var sc2 = n2._gen === 0 ? 1.45 : n2._gen === 1 ? 1.18 : n2._gen === 2 ? 1.02 : 0.90;
+                    if (n1._isPartner) sc1 *= 0.85;
+                    if (n2._isPartner) sc2 *= 0.85;
+                    var r1 = LW * sc1 * 0.62;
+                    var r2 = LW * sc2 * 0.62;
 
                     var isPartner = (n1.children && n1.children.some(function (c) { return c.id === n2.id && n2._isPartner; })) ||
                                     (n2.children && n2.children.some(function (c) { return c.id === n1.id && n1._isPartner; }));
                     var isSib = (n1._sx === n2._sx && n1._sy === n2._sy);
-                    var pad = isPartner ? 12 : (isSib ? 38 : 25);
-                    var minD = (isPartner ? (r1 + r2) * 0.65 : (r1 + r2)) + pad;
+                    var pad = isPartner ? 14 : (isSib ? 48 : 28);
+                    var minD = (isPartner ? (r1 + r2) * 0.68 : (r1 + r2)) + pad;
 
                     if (d2 < minD * minD && d2 > 0) {
                         var dist = Math.sqrt(d2) || 0.1;
-                        var force = (minD - dist) / dist * 0.20;
+                        var force = (minD - dist) / dist * 0.26;
                         var ox = dx * force, oy = dy * force;
-                        var m1 = n1._isPartner ? 0.3 : 1.0;
-                        var m2 = n2._isPartner ? 0.3 : 1.0;
+                        var m1 = n1._isPartner ? 0.25 : 1.0;
+                        var m2 = n2._isPartner ? 0.25 : 1.0;
                         n1._x += ox * m1; n1._y += oy * m1;
                         n2._x -= ox * m2; n2._y -= oy * m2;
                         moved = true;
                     }
                 }
             }
+
+            // Apply wide-dome elliptical constraint for a balanced rounded canopy edge
+            nodes.forEach(function (n) {
+                if (n.id !== ROOT.id) {
+                    var edx = n._x - canopyCenterX;
+                    var edy = n._y - canopyCenterY;
+                    var ellipseDist = (edx * edx) / (rx * rx) + (edy * edy) / (ry * ry);
+                    if (ellipseDist > 1.0) {
+                        var scale = 1.0 / Math.sqrt(ellipseDist);
+                        n._x = canopyCenterX + edx * scale;
+                        n._y = canopyCenterY + edy * scale;
+                        moved = true;
+                    }
+                }
+            });
+
+            // Clamp Y coordinates to stay above trunk top
+            nodes.forEach(function (n) {
+                if (n.id !== ROOT.id) {
+                    var limitY = ROOT._y + 20;
+                    if (n._y > limitY) {
+                        n._y = limitY;
+                        moved = true;
+                    }
+                }
+            });
+
             if (!moved) break;
         }
     };
@@ -466,8 +516,8 @@
 
     FamilyTreeSVG.prototype._drawBg = function (rx, groundY) {
         this._els.gBg.innerHTML = '';
-        var groundRx = Math.max(200, Math.min(550, 150 + this._countMembers(this._ROOT) * 4));
-        mkSVG('ellipse', { cx: rx, cy: groundY + 14, rx: groundRx, ry: 65, fill: '#d6a661', opacity: '0.4' }, this._els.gBg);
+        var groundRx = Math.max(220, Math.min(560, 160 + this._countMembers(this._ROOT) * 4));
+        mkSVG('ellipse', { cx: rx, cy: groundY + 10, rx: groundRx, ry: 48, fill: '#d6a661', opacity: '0.45' }, this._els.gBg);
     };
 
     FamilyTreeSVG.prototype._drawTrunk = function (rx, groundY, topY) {
@@ -536,16 +586,24 @@
         var dx = x2 - x1, dy = y2 - y1;
         var len = Math.sqrt(dx * dx + dy * dy) || 1;
         var px = -dy / len, py = dx / len;
-        var sf = isP ? 0.02 : (0.06 + rng(nid, 'sw') * 0.04);
-        var sweep = len * sf;
-        var side = dx < 0 ? 0.75 : -0.75;
+
+        // Sweep (curviness) scales naturally with branch length
+        var sweepFactor = isP ? 0.05 : (0.16 + rng(nid, 'sw') * 0.12);
+        var sweep = len * sweepFactor;
+
+        // Natural upward curving
+        var biasSide = dx < 0 ? 1 : -1;
+        var side = biasSide * (0.45 + rng(nid, 'sd') * 0.55);
+
+        // Multi-segment wobbly path — gnarly living wood with rounded joints
+        var steps = 8;
         var d = 'M' + x1 + ',' + y1;
         var ROOT = this._ROOT;
-        for (var i = 1; i <= 8; i++) {
-            var t = i / 8;
+        for (var i = 1; i <= steps; i++) {
+            var t = i / steps;
             var lx = x1 + dx * t, ly = y1 + dy * t;
             var bow = Math.sin(t * Math.PI) * sweep * side;
-            var wig = i < 8 ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.025) : 0;
+            var wig = (i < steps) ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.055) : 0;
             var cx = lx + px * (bow + wig), cy = ly + py * (bow + wig);
             if (cy > ROOT._y + 30) cy = ROOT._y + 30;
             d += ' L' + cx + ',' + cy;
@@ -673,10 +731,10 @@
             var dx = b.x2 - b.x1, dy = b.y2 - b.y1;
             var len = Math.sqrt(dx * dx + dy * dy) || 1;
             var px = -dy / len, py = dx / len;
-            var sf = b.isP ? 0.04 : (0.10 + rng(b.id, 'sw') * 0.10);
+            var sf = b.isP ? 0.05 : (0.16 + rng(b.id, 'sw') * 0.12);
             var sweep = len * sf;
             var bs = dx < 0 ? 1 : -1;
-            var side = bs * (0.55 + rng(b.id, 'sd') * 0.35);
+            var side = bs * (0.45 + rng(b.id, 'sd') * 0.55);
             for (var i = 0; i < num; i++) {
                 var t = 0.2 + (i / num) * 0.65;
                 var disp = Math.sin(t * Math.PI) * sweep * side;
@@ -766,7 +824,7 @@
         var mc = this._countMembers(this._ROOT);
         this._TRUNK_H = Math.max(200, Math.min(520, 140 + mc * 3.5));
         var CX = 700, CY = 1100;
-        this._pass2(this._ROOT, CX, CY, CX, CY - this._TRUNK_H, 0, 0, -80, 80);
+        this._pass2(this._ROOT, CX, CY, CX, CY - this._TRUNK_H, 0, 0);
         this._resolveOverlaps();
 
         var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -776,10 +834,10 @@
             x0 = Math.min(x0, n._x - LW); y0 = Math.min(y0, n._y - LH);
             x1 = Math.max(x1, n._x + LW); y1 = Math.max(y1, n._y + LH);
         });
-        var moundRx = Math.max(220, Math.min(550, 160 + mc * 4));
+        var moundRx = Math.max(240, Math.min(580, 170 + mc * 4));
         x0 = Math.min(x0, this._ROOT._x - moundRx);
         x1 = Math.max(x1, this._ROOT._x + moundRx);
-        y1 = Math.max(y1, this._ROOT._y + this._TRUNK_H + 90);
+        y1 = Math.max(y1, this._ROOT._y + this._TRUNK_H + 75);
 
         var PAD = 80, ox = -x0 + PAD, oy = -y0 + PAD;
         Object.keys(nm).forEach(function (id) {
@@ -793,22 +851,23 @@
         this._els.svg.style.height = this._SVG_H + 'px';
 
         var groundY = this._ROOT._y + this._TRUNK_H;
-        this._drawBg(this._ROOT._x, groundY + 50);
-        this._drawTrunk(this._ROOT._x, groundY + 25, this._ROOT._y + LH * .45);
+        this._drawBg(this._ROOT._x, groundY);
+        this._drawTrunk(this._ROOT._x, groundY, this._ROOT._y + LH * .45);
         this._drawAllBranches(this._ROOT);
         this._drawDecorations();
         this._drawLeaf(this._ROOT);
     };
 
-    FamilyTreeSVG.prototype.fitView = function () {
+    FamilyTreeSVG.prototype.fitView = function (smooth) {
+        var isSmooth = smooth === true;
         var sw = this._els.stage.clientWidth || this._container.clientWidth || window.innerWidth;
         var sh = this._els.stage.clientHeight || this._container.clientHeight || window.innerHeight;
         if (!sw || !sh || !this._SVG_W || !this._SVG_H) return;
-        var fz = Math.min(sw / this._SVG_W, sh / this._SVG_H) * 0.82;
+        var fz = Math.min(sw / this._SVG_W, sh / this._SVG_H) * 0.88;
         this._zoom = fz;
         this._panX = (sw - this._SVG_W * this._zoom) / 2;
         this._panY = (sh - this._SVG_H * this._zoom) / 2;
-        this._applyTransform(true);
+        this._applyTransform(isSmooth);
     };
 
     FamilyTreeSVG.prototype.setColors = function (leafColor, branchColor, trunkColor) {
@@ -826,7 +885,8 @@
         this._autoCollapse(d);
         this.render();
         var self = this;
-        setTimeout(function () { self.fitView(); }, 90);
+        this.fitView(false);
+        setTimeout(function () { self.fitView(false); }, 60);
     };
 
     FamilyTreeSVG.prototype.exportSVG = function (options) {
