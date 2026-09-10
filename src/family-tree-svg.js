@@ -117,7 +117,7 @@
         this._BC = [];
         this._BW = [38, 26, 17, 10.5, 6.5, 4.0];
         this._TRUNK_H = 480;
-        this._BR_LEN = [0, 280, 210, 165, 130, 100];
+        this._BR_LEN = [0, 260, 185, 135, 95, 70];
         this._SPREAD = [0, 220, 170, 135, 108, 85];
         this._LW = 78;
         this._LH = 96;
@@ -354,11 +354,19 @@
             if (k._isPartner) kidAngle = angle - 22;
             else kidAngle += (rng(k.id, 'j') - .5) * 8;
             if (!k._isPartner) kidAngle = Math.max(-82, Math.min(82, kidAngle));
-            var swMul = Math.max(1, Math.pow(k._sw, 0.28) * 0.72);
+            var swMul = Math.max(1, Math.min(1.32, Math.pow(k._sw, 0.25) * 0.75));
             var lenVar = branchLen * (k._isPartner ? 0.32 : (0.88 + rng(k.id, 'l') * 0.26)) * swMul;
             var rad = (kidAngle - 90) * Math.PI / 180;
             var kex = endX + Math.cos(rad) * lenVar;
             var key = endY + Math.sin(rad) * lenVar;
+            // Gravity sag for long lateral branches
+            if (ROOT && ROOT._x !== undefined && depth >= 2) {
+                var latDist = Math.abs(kex - ROOT._x);
+                if (latDist > 220) {
+                    var sag = Math.pow((latDist - 220) / 380, 1.5) * 45;
+                    key += sag;
+                }
+            }
             var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
             if (key > limitY) key = limitY;
             self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1);
@@ -368,8 +376,8 @@
     FamilyTreeSVG.prototype._resolveOverlaps = function () {
         var nodes = Object.values(this._nodeMap);
         var N = nodes.length;
-        var R = Math.max(520, Math.min(1200, Math.sqrt(N) * 135));
-        var rx = R * 1.6, ry = R * 0.85;
+        var R = Math.max(480, Math.min(950, Math.sqrt(N) * 115));
+        var rx = R * 1.30, ry = R * 0.90;
         var ccx = this._ROOT._x, ccy = this._ROOT._y - ry * 0.52;
         var LW = this._LW, ROOT = this._ROOT;
         for (var it = 0; it < 80; it++) {
@@ -512,8 +520,9 @@
             var t = i / steps;
             var lx = x1 + dx * t, ly = y1 + dy * t;
             var bow = Math.sin(t * Math.PI) * sweep * side;
-            var wig = i < steps ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.05) : 0;
-            var cx = lx + px * (bow + wig), cy = ly + py * (bow + wig);
+            var grav = Math.sin(t * Math.PI) * (len * 0.05);
+            var wig = i < steps ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.045) : 0;
+            var cx = lx + px * (bow + wig), cy = ly + py * (bow + wig) + grav;
             if (cy > ROOT._y + 30) cy = ROOT._y + 30;
             d += ' L' + cx + ',' + cy;
         }
