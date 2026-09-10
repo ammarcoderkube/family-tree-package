@@ -19,6 +19,14 @@
     "organic",
     "interactive"
   ],
-  "author": "",
+  "author": "ammarcoderkube",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ammarcoderkube/family-tree-package.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ammarcoderkube/family-tree-package/issues"
+  },
+  "homepage": "https://github.com/ammarcoderkube/family-tree-package#readme",
   "license": "MIT"
 }
