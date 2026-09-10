@@ -132,6 +132,7 @@
         this._isDragging = false;
         this._lastMX = 0;
         this._lastMY = 0;
+        this._uid = 't' + Math.random().toString(36).substr(2, 7);
 
         this._buildDOM();
         this._bindEvents();
@@ -143,6 +144,7 @@
             this._collapsed = {};
             this._autoCollapse(d);
             this.render();
+            this.fitView();
             var self = this;
             setTimeout(function () { self.fitView(); }, 90);
         }
@@ -162,7 +164,7 @@
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.style.cssText = 'position:absolute;top:0;left:0;overflow:visible;';
         var defs = mkSVG('defs', {}, svg);
-        var filter = mkSVG('filter', { id: 'fts-ds', x: '-30%', y: '-30%', width: '160%', height: '160%' }, defs);
+        var filter = mkSVG('filter', { id: 'fts-ds-' + this._uid, x: '-30%', y: '-30%', width: '160%', height: '160%' }, defs);
         mkSVG('feDropShadow', { dx: '2', dy: '4', stdDeviation: '6', 'flood-color': 'rgba(0,0,0,0.35)' }, filter);
         var vp = mkSVG('g', {}, svg);
         var gBg = mkSVG('g', {}, vp);
@@ -308,95 +310,141 @@
         node._gen = gen;
         this._nodeMap[node.id] = node;
         var kids = this._collapsed[node.id] ? [] : (node.children || []);
-        if (!kids.length) { node._sw = 1; return; }
+        var realKids = kids.filter(function (k) { return !k._isPartner; });
+        var partners = kids.filter(function (k) { return k._isPartner; });
         var self = this;
-        kids.forEach(function (k) { self._pass1(k, gen + 1); });
-        var s = 0; kids.forEach(function (k) { s += k._sw; });
-        node._sw = s;
+        partners.forEach(function (p) {
+            p._gen = gen;
+            p._sw = 0;
+            self._nodeMap[p.id] = p;
+        });
+        if (!realKids.length) { node._sw = 1; return; }
+        realKids.forEach(function (k) { self._pass1(k, gen + 1); });
+        var s = 0; realKids.forEach(function (k) { s += k._sw; });
+        node._sw = Math.max(1, s);
     };
 
-    FamilyTreeSVG.prototype._pass2 = function (node, startX, startY, endX, endY, angle, depth) {
+    FamilyTreeSVG.prototype._pass2 = function (node, startX, startY, endX, endY, angle, depth, minAng, maxAng) {
         node._sx = startX; node._sy = startY; node._x = endX; node._y = endY;
         node._angle = angle; node._depth = depth;
+
+        if (minAng === undefined) minAng = -78;
+        if (maxAng === undefined) maxAng = 78;
+
         var kids = this._collapsed[node.id] ? [] : (node.children || []);
         if (!kids.length) return;
-        var depth2 = Math.min(depth + 1, this._SPREAD.length - 1);
-        var branchLen = this._BR_LEN[depth2] || 70;
-        var totalSW = 0; kids.forEach(function (k) { totalSW += k._sw; });
-        var totalSpread = this._SPREAD[depth2];
-        var minSp = [0, 140, 100, 82, 65, 52];
-        if (kids.length > 0) totalSpread = Math.max(totalSpread, minSp[depth2] || 52);
-        if (kids.length < 3) totalSpread = totalSpread * 1.35;
-        totalSpread = Math.min(240, totalSpread * Math.max(1, Math.pow(totalSW, 0.28) * 0.72));
-        if (depth === 0) totalSpread = Math.min(200, totalSpread);
-        var centerAngle = depth === 0 ? angle : angle * 0.62;
-        var startAngle = centerAngle - totalSpread / 2;
-        var offset = 0;
+
+        var realKids = kids.filter(function (k) { return !k._isPartner; });
+        var partners = kids.filter(function (k) { return k._isPartner; });
         var self = this;
         var ROOT = this._ROOT;
-        kids.forEach(function (k) {
-            var frac = k._sw / totalSW;
-            var kidAngle = startAngle + (offset + frac * 0.5) * totalSpread;
-            offset += frac;
-            if (k._isPartner) kidAngle = angle - 22;
-            else kidAngle += (rng(k.id, 'j') - .5) * 8;
-            if (!k._isPartner) kidAngle = Math.max(-82, Math.min(82, kidAngle));
-            var swMul = Math.max(1, Math.pow(k._sw, 0.28) * 0.72);
-            var lenVar = branchLen * (k._isPartner ? 0.32 : (0.88 + rng(k.id, 'l') * 0.26)) * swMul;
+
+        // Position partner nodes as attached companion leaves
+        partners.forEach(function (p, idx) {
+            var pOffset = angle < -10 ? -36 : (angle > 10 ? 36 : (idx % 2 === 0 ? -32 : 32));
+            var pAng = angle + pOffset;
+            var pDist = 58;
+            var pRad = (pAng - 90) * Math.PI / 180;
+            var px = endX + Math.cos(pRad) * pDist;
+            var py = endY + Math.sin(pRad) * pDist;
+            var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
+            if (py > limitY) py = limitY;
+            p._sx = endX; p._sy = endY; p._x = px; p._y = py;
+            p._angle = pAng; p._depth = depth;
+        });
+
+        if (!realKids.length) return;
+
+        var depthIdx = Math.min(depth + 1, self._BR_LEN.length - 1);
+        var baseBranchLen = self._BR_LEN[depthIdx] || 85;
+
+        var totalSW = 0;
+        realKids.forEach(function (k) { totalSW += k._sw; });
+
+        var span = maxAng - minAng;
+
+        // Single child: branch continues along parent's path within its cone
+        if (realKids.length === 1) {
+            var k = realKids[0];
+            var kidAngle = angle * 0.90 + (rng(k.id, 'j') - 0.5) * 4;
+            kidAngle = Math.max(minAng + 2, Math.min(maxAng - 2, kidAngle));
+            var swMul = Math.max(0.92, Math.min(1.22, Math.pow(k._sw, 0.22)));
+            var lenVar = baseBranchLen * (0.94 + rng(k.id, 'l') * 0.14) * swMul;
             var rad = (kidAngle - 90) * Math.PI / 180;
             var kex = endX + Math.cos(rad) * lenVar;
             var key = endY + Math.sin(rad) * lenVar;
             var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
             if (key > limitY) key = limitY;
-            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1);
+            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1, minAng, maxAng);
+            return;
+        }
+
+        // Multiple children: partition [minAng, maxAng] proportionally so branches never cross
+        var buffer = Math.min(4, span / (realKids.length * 5));
+        var usableSpan = Math.max(10, span - buffer * (realKids.length - 1));
+        var curMin = minAng;
+
+        realKids.forEach(function (k) {
+            var frac = k._sw / totalSW;
+            var kSpan = usableSpan * frac;
+            var kMin = curMin;
+            var kMax = kMin + kSpan;
+            curMin = kMax + buffer;
+
+            var kidAngle = (kMin + kMax) / 2;
+            var jitterLimit = Math.min(3.5, kSpan * 0.15);
+            kidAngle += (rng(k.id, 'j') - 0.5) * jitterLimit;
+            kidAngle = Math.max(kMin + 1, Math.min(kMax - 1, kidAngle));
+
+            var swMul = Math.max(0.90, Math.min(1.22, Math.pow(k._sw, 0.22)));
+            var lenVar = baseBranchLen * (0.92 + rng(k.id, 'l') * 0.16) * swMul;
+            var rad = (kidAngle - 90) * Math.PI / 180;
+            var kex = endX + Math.cos(rad) * lenVar;
+            var key = endY + Math.sin(rad) * lenVar;
+            var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
+            if (key > limitY) key = limitY;
+
+            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1, kMin, kMax);
         });
     };
 
     FamilyTreeSVG.prototype._resolveOverlaps = function () {
         var nodes = Object.values(this._nodeMap);
-        var N = nodes.length;
-        var R = Math.max(520, Math.min(1200, Math.sqrt(N) * 135));
-        var rx = R * 1.6, ry = R * 0.85;
-        var ccx = this._ROOT._x, ccy = this._ROOT._y - ry * 0.52;
         var LW = this._LW, ROOT = this._ROOT;
-        for (var it = 0; it < 80; it++) {
+        for (var it = 0; it < 60; it++) {
             var moved = false;
             for (var j = 0; j < nodes.length; j++) {
                 for (var k = j + 1; k < nodes.length; k++) {
                     var n1 = nodes[j], n2 = nodes[k];
+                    if (n1.id === ROOT.id || n2.id === ROOT.id) continue;
+
                     var dx = n1._x - n2._x, dy = n1._y - n2._y;
                     var d2 = dx * dx + dy * dy;
-                    var sc1 = n1._gen === 0 ? 1.5 : n1._gen === 1 ? 1.18 : n1._gen === 2 ? 1.02 : 0.90;
-                    var sc2 = n2._gen === 0 ? 1.5 : n2._gen === 1 ? 1.18 : n2._gen === 2 ? 1.02 : 0.90;
-                    if (n1._isPartner) sc1 *= 0.85;
-                    if (n2._isPartner) sc2 *= 0.85;
-                    var r1 = LW * sc1 * 0.65, r2 = LW * sc2 * 0.65;
+                    var sc1 = n1._gen === 0 ? 1.4 : n1._gen === 1 ? 1.15 : n1._gen === 2 ? 1.0 : 0.88;
+                    var sc2 = n2._gen === 0 ? 1.4 : n2._gen === 1 ? 1.15 : n2._gen === 2 ? 1.0 : 0.88;
+                    if (n1._isPartner) sc1 *= 0.82;
+                    if (n2._isPartner) sc2 *= 0.82;
+                    var r1 = LW * sc1 * 0.58;
+                    var r2 = LW * sc2 * 0.58;
+
+                    var isPartner = (n1.children && n1.children.some(function (c) { return c.id === n2.id && n2._isPartner; })) ||
+                                    (n2.children && n2.children.some(function (c) { return c.id === n1.id && n1._isPartner; }));
                     var isSib = (n1._sx === n2._sx && n1._sy === n2._sy);
-                    var pad = isSib ? 65 : 35;
-                    var minD = r1 + r2 + pad;
-                    if (n1.children && n1.children.some(function (c) { return c.id === n2.id && n2._isPartner; })) minD = (r1 + r2) * 0.7;
-                    if (n2.children && n2.children.some(function (c) { return c.id === n1.id && n1._isPartner; })) minD = (r1 + r2) * 0.7;
-                    if (d2 < minD * minD) {
+                    var pad = isPartner ? 12 : (isSib ? 38 : 25);
+                    var minD = (isPartner ? (r1 + r2) * 0.65 : (r1 + r2)) + pad;
+
+                    if (d2 < minD * minD && d2 > 0) {
                         var dist = Math.sqrt(d2) || 0.1;
-                        var force = (minD - dist) / dist * 0.35;
+                        var force = (minD - dist) / dist * 0.20;
                         var ox = dx * force, oy = dy * force;
-                        var m1 = n1._gen === 0 ? 0.01 : 1, m2 = n2._gen === 0 ? 0.01 : 1;
+                        var m1 = n1._isPartner ? 0.3 : 1.0;
+                        var m2 = n2._isPartner ? 0.3 : 1.0;
                         n1._x += ox * m1; n1._y += oy * m1;
                         n2._x -= ox * m2; n2._y -= oy * m2;
                         moved = true;
                     }
                 }
             }
-            nodes.forEach(function (n) {
-                if (n.id !== ROOT.id) {
-                    var dx = n._x - ccx, dy = n._y - ccy;
-                    var ed = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
-                    if (ed > 1.0) { var s = 1.0 / Math.sqrt(ed); n._x = ccx + dx * s; n._y = ccy + dy * s; moved = true; }
-                }
-            });
-            nodes.forEach(function (n) {
-                if (n.id !== ROOT.id) { var lim = ROOT._y + 20; if (n._y > lim) { n._y = lim; moved = true; } }
-            });
             if (!moved) break;
         }
     };
@@ -488,17 +536,16 @@
         var dx = x2 - x1, dy = y2 - y1;
         var len = Math.sqrt(dx * dx + dy * dy) || 1;
         var px = -dy / len, py = dx / len;
-        var sf = isP ? 0.05 : (0.16 + rng(nid, 'sw') * 0.12);
+        var sf = isP ? 0.02 : (0.06 + rng(nid, 'sw') * 0.04);
         var sweep = len * sf;
-        var bs = dx < 0 ? 1 : -1;
-        var side = bs * (0.45 + rng(nid, 'sd') * 0.55);
+        var side = dx < 0 ? 0.75 : -0.75;
         var d = 'M' + x1 + ',' + y1;
         var ROOT = this._ROOT;
         for (var i = 1; i <= 8; i++) {
             var t = i / 8;
             var lx = x1 + dx * t, ly = y1 + dy * t;
             var bow = Math.sin(t * Math.PI) * sweep * side;
-            var wig = i < 8 ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.06) : 0;
+            var wig = i < 8 ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.025) : 0;
             var cx = lx + px * (bow + wig), cy = ly + py * (bow + wig);
             if (cy > ROOT._y + 30) cy = ROOT._y + 30;
             d += ' L' + cx + ',' + cy;
@@ -538,7 +585,7 @@
         if (node._isPartner) sc *= 0.85;
         var w = this._LW * sc, h = this._LH * sc, cx = node._x, cy = node._y, ang = node._angle || 0;
         var g = mkSVG('g', { 'data-id': node.id, cursor: 'pointer' }, this._els.gLv);
-        var gid = 'lg_' + node.id;
+        var gid = 'lg_' + this._uid + '_' + node.id;
         var defs = this._els.svg.querySelector('defs');
         if (!defs.querySelector('#' + gid)) {
             var lg = mkSVG('linearGradient', { id: gid, x1: '25%', y1: '0%', x2: '78%', y2: '100%' }, defs);
@@ -546,7 +593,7 @@
             mkSVG('stop', { offset: '50%', 'stop-color': col.f }, lg);
             mkSVG('stop', { offset: '100%', 'stop-color': darker(col.f, 0.1) }, lg);
         }
-        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'rgba(0,0,0,0.25)', filter: 'url(#fts-ds)', transform: 'translate(' + (cx + 3) + ',' + (cy + 5) + ') rotate(' + ang + ')' }, g);
+        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'rgba(0,0,0,0.25)', filter: 'url(#fts-ds-' + this._uid + ')', transform: 'translate(' + (cx + 3) + ',' + (cy + 5) + ') rotate(' + ang + ')' }, g);
         mkSVG('path', { d: leafD(0, 0, w, h), fill: 'url(#' + gid + ')', stroke: col.s, 'stroke-width': node._isPartner ? '1.5' : '2.5', transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')' }, g);
         var lines = this._splitName(node.name || node.full_name || 'No Name');
         var fs = (node._gen === 0 ? 13 : 11) * sc, lineH = fs + 2.5;
@@ -567,7 +614,7 @@
             var tg2 = mkSVG('g', { cursor: 'pointer', class: 'collapse-btn' }, g);
             mkSVG('circle', { cx: tipX, cy: tipY, r: 10, fill: '#f9f3e0', stroke: col.s, 'stroke-width': '1.8' }, tg2);
             var bt = mkSVG('text', { x: tipX, y: tipY, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '12', 'font-weight': '700', fill: '#3a1f13' }, tg2);
-            bt.textContent = this._collapsed[node.id] ? '+' : '−';
+            bt.textContent = this._collapsed[node.id] ? '+' : '-';
             tg2.onclick = function (e) { e.stopPropagation(); self._toggleCollapse(node.id); };
         }
         if (!this._collapsed[node.id]) kids.forEach(function (c) { self._drawLeaf(c); });
@@ -577,7 +624,7 @@
         var gi = Math.min(gen, this._LC.length - 1);
         var col = this._LC[gi];
         var g = mkSVG('g', { opacity: '0.72' }, this._els.gDeco);
-        var gid = 'dec_lg_' + Math.floor(cx) + '_' + Math.floor(cy) + '_' + Math.floor(w);
+        var gid = 'dec_lg_' + this._uid + '_' + Math.floor(cx) + '_' + Math.floor(cy) + '_' + Math.floor(w);
         var defs = this._els.svg.querySelector('defs');
         if (!defs.querySelector('#' + gid)) {
             var lg = mkSVG('linearGradient', { id: gid, x1: '25%', y1: '0%', x2: '78%', y2: '100%' }, defs);
@@ -585,7 +632,7 @@
             mkSVG('stop', { offset: '50%', 'stop-color': col.f }, lg);
             mkSVG('stop', { offset: '100%', 'stop-color': darker(col.f, 0.1) }, lg);
         }
-        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'rgba(0,0,0,0.15)', filter: 'url(#fts-ds)', transform: 'translate(' + (cx + 2) + ',' + (cy + 3) + ') rotate(' + ang + ')' }, g);
+        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'rgba(0,0,0,0.15)', filter: 'url(#fts-ds-' + this._uid + ')', transform: 'translate(' + (cx + 2) + ',' + (cy + 3) + ') rotate(' + ang + ')' }, g);
         mkSVG('path', { d: leafD(0, 0, w, h), fill: 'url(#' + gid + ')', stroke: col.s, 'stroke-width': '1.3', transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')' }, g);
     };
 
@@ -719,7 +766,7 @@
         var mc = this._countMembers(this._ROOT);
         this._TRUNK_H = Math.max(200, Math.min(520, 140 + mc * 3.5));
         var CX = 700, CY = 1100;
-        this._pass2(this._ROOT, CX, CY, CX, CY - this._TRUNK_H, 0, 0);
+        this._pass2(this._ROOT, CX, CY, CX, CY - this._TRUNK_H, 0, 0, -80, 80);
         this._resolveOverlaps();
 
         var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -729,12 +776,17 @@
             x0 = Math.min(x0, n._x - LW); y0 = Math.min(y0, n._y - LH);
             x1 = Math.max(x1, n._x + LW); y1 = Math.max(y1, n._y + LH);
         });
-        var PAD = 140, ox = -x0 + PAD, oy = -y0 + PAD;
+        var moundRx = Math.max(220, Math.min(550, 160 + mc * 4));
+        x0 = Math.min(x0, this._ROOT._x - moundRx);
+        x1 = Math.max(x1, this._ROOT._x + moundRx);
+        y1 = Math.max(y1, this._ROOT._y + this._TRUNK_H + 90);
+
+        var PAD = 80, ox = -x0 + PAD, oy = -y0 + PAD;
         Object.keys(nm).forEach(function (id) {
             var n = nm[id]; n._x += ox; n._y += oy; n._sx += ox; n._sy += oy;
         });
-        this._SVG_W = (x1 - x0) + PAD * 2;
-        this._SVG_H = (y1 - y0) + PAD * 2 + 150;
+        this._SVG_W = Math.round((x1 - x0) + PAD * 2);
+        this._SVG_H = Math.round((y1 - y0) + PAD * 2);
         this._els.svg.setAttribute('width', this._SVG_W);
         this._els.svg.setAttribute('height', this._SVG_H);
         this._els.svg.style.width = this._SVG_W + 'px';
@@ -749,9 +801,10 @@
     };
 
     FamilyTreeSVG.prototype.fitView = function () {
-        var sw = this._els.stage.clientWidth;
-        var sh = this._els.stage.clientHeight;
-        var fz = Math.min(sw / this._SVG_W, sh / this._SVG_H) * .82;
+        var sw = this._els.stage.clientWidth || this._container.clientWidth || window.innerWidth;
+        var sh = this._els.stage.clientHeight || this._container.clientHeight || window.innerHeight;
+        if (!sw || !sh || !this._SVG_W || !this._SVG_H) return;
+        var fz = Math.min(sw / this._SVG_W, sh / this._SVG_H) * 0.82;
         this._zoom = fz;
         this._panX = (sw - this._SVG_W * this._zoom) / 2;
         this._panY = (sh - this._SVG_H * this._zoom) / 2;
