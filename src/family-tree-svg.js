@@ -117,7 +117,7 @@
         this._BC = [];
         this._BW = [38, 26, 17, 10.5, 6.5, 4.0];
         this._TRUNK_H = 480;
-        this._BR_LEN = [0, 260, 185, 135, 95, 70];
+        this._BR_LEN = [0, 280, 210, 165, 130, 100];
         this._SPREAD = [0, 220, 170, 135, 108, 85];
         this._LW = 78;
         this._LH = 96;
@@ -302,6 +302,20 @@
         return count;
     };
 
+    FamilyTreeSVG.prototype._countGenerations = function (node) {
+        function getMaxDepth(n, depth) {
+            var max = depth;
+            var kids = n.children || [];
+            kids.forEach(function (c) {
+                var nextDepth = depth + (c._isPartner ? 0 : 1);
+                var d = getMaxDepth(c, nextDepth);
+                if (d > max) max = d;
+            });
+            return max;
+        }
+        return getMaxDepth(node, 1);
+    };
+
     FamilyTreeSVG.prototype._autoCollapse = function (root) {
         this._collapsed = {};
         var count = this._countMembers(root);
@@ -337,11 +351,24 @@
         var branchLen = this._BR_LEN[depth2] || 70;
         var totalSW = 0; kids.forEach(function (k) { totalSW += k._sw; });
         var totalSpread = this._SPREAD[depth2];
+
+        // Make canopy round and fan-shaped when branches are fewer
         var minSp = [0, 140, 100, 82, 65, 52];
-        if (kids.length > 0) totalSpread = Math.max(totalSpread, minSp[depth2] || 52);
-        if (kids.length < 3) totalSpread = totalSpread * 1.35;
+        if (kids.length > 0) {
+            totalSpread = Math.max(totalSpread, minSp[depth2] || 52);
+        }
+        if (kids.length < 3) {
+            totalSpread = totalSpread * 1.35;
+        }
+
         totalSpread = Math.min(240, totalSpread * Math.max(1, Math.pow(totalSW, 0.28) * 0.72));
-        if (depth === 0) totalSpread = Math.min(200, totalSpread);
+
+        // Force main canopy to be wide dome but keep branches above trunk top
+        if (depth === 0) {
+            totalSpread = Math.min(200, totalSpread);
+        }
+
+        // Naturally pull children branches upwards by scaling the parent's angle
         var centerAngle = depth === 0 ? angle : angle * 0.62;
         var startAngle = centerAngle - totalSpread / 2;
         var offset = 0;
@@ -353,70 +380,105 @@
             offset += frac;
             if (k._isPartner) kidAngle = angle - 22;
             else kidAngle += (rng(k.id, 'j') - .5) * 8;
-            if (!k._isPartner) kidAngle = Math.max(-82, Math.min(82, kidAngle));
-            var swMul = Math.max(1, Math.min(1.32, Math.pow(k._sw, 0.25) * 0.75));
-            var lenVar = branchLen * (k._isPartner ? 0.32 : (0.88 + rng(k.id, 'l') * 0.26)) * swMul;
+
+            if (!k._isPartner) {
+                kidAngle = Math.max(-82, Math.min(82, kidAngle));
+            }
+
+            var swMultiplier = Math.max(1, Math.pow(k._sw, 0.28) * 0.72);
+            var lenVar = branchLen * (k._isPartner ? 0.32 : (0.88 + rng(k.id, 'l') * 0.26)) * swMultiplier;
             var rad = (kidAngle - 90) * Math.PI / 180;
             var kex = endX + Math.cos(rad) * lenVar;
             var key = endY + Math.sin(rad) * lenVar;
-            // Gravity sag for long lateral branches
-            if (ROOT && ROOT._x !== undefined && depth >= 2) {
-                var latDist = Math.abs(kex - ROOT._x);
-                if (latDist > 220) {
-                    var sag = Math.pow((latDist - 220) / 380, 1.5) * 45;
-                    key += sag;
-                }
-            }
+
+            // Clamp Y to prevent initial branch layout from dipping below the top of the trunk
             var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
             if (key > limitY) key = limitY;
+
             self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1);
         });
     };
 
     FamilyTreeSVG.prototype._resolveOverlaps = function () {
         var nodes = Object.values(this._nodeMap);
+        var iterations = 80; // More iterations for better spacing with wider layout
+
+        // Calculate dynamic canopy size — wide dome ellipse (rx wider, ry shorter)
         var N = nodes.length;
-        var R = Math.max(480, Math.min(950, Math.sqrt(N) * 115));
-        var rx = R * 1.30, ry = R * 0.90;
-        var ccx = this._ROOT._x, ccy = this._ROOT._y - ry * 0.52;
+        var R = Math.max(520, Math.min(1200, Math.sqrt(N) * 135));
+        var rx = R * 1.6;  // wider horizontally for dome shape
+        var ry = R * 0.85; // taller vertically to cover more area
+        var canopyCenterX = this._ROOT._x;
+        var canopyCenterY = this._ROOT._y - ry * 0.52;
         var LW = this._LW, ROOT = this._ROOT;
-        for (var it = 0; it < 80; it++) {
+
+        for (var i = 0; i < iterations; i++) {
             var moved = false;
             for (var j = 0; j < nodes.length; j++) {
                 for (var k = j + 1; k < nodes.length; k++) {
                     var n1 = nodes[j], n2 = nodes[k];
-                    var dx = n1._x - n2._x, dy = n1._y - n2._y;
+                    var dx = n1._x - n2._x;
+                    var dy = n1._y - n2._y;
                     var d2 = dx * dx + dy * dy;
+
                     var sc1 = n1._gen === 0 ? 1.5 : n1._gen === 1 ? 1.18 : n1._gen === 2 ? 1.02 : 0.90;
                     var sc2 = n2._gen === 0 ? 1.5 : n2._gen === 1 ? 1.18 : n2._gen === 2 ? 1.02 : 0.90;
                     if (n1._isPartner) sc1 *= 0.85;
                     if (n2._isPartner) sc2 *= 0.85;
-                    var r1 = LW * sc1 * 0.65, r2 = LW * sc2 * 0.65;
-                    var isSib = (n1._sx === n2._sx && n1._sy === n2._sy);
-                    var pad = isSib ? 65 : 35;
-                    var minD = r1 + r2 + pad;
-                    if (n1.children && n1.children.some(function (c) { return c.id === n2.id && n2._isPartner; })) minD = (r1 + r2) * 0.7;
-                    if (n2.children && n2.children.some(function (c) { return c.id === n1.id && n1._isPartner; })) minD = (r1 + r2) * 0.7;
-                    if (d2 < minD * minD) {
+
+                    var r1 = LW * sc1 * 0.65;
+                    var r2 = LW * sc2 * 0.65;
+
+                    // Sibling padding — extra spacing for cleaner separation
+                    var isSibling = (n1._sx === n2._sx && n1._sy === n2._sy);
+                    var padding = isSibling ? 65 : 35;
+                    var minDist = r1 + r2 + padding;
+
+                    if (n1.children && n1.children.some(function (c) { return c.id === n2.id && n2._isPartner; })) minDist = (r1 + r2) * 0.7;
+                    if (n2.children && n2.children.some(function (c) { return c.id === n1.id && n1._isPartner; })) minDist = (r1 + r2) * 0.7;
+
+                    if (d2 < minDist * minDist) {
                         var dist = Math.sqrt(d2) || 0.1;
-                        var force = (minD - dist) / dist * 0.35;
-                        var ox = dx * force, oy = dy * force;
-                        var m1 = n1._gen === 0 ? 0.01 : 1, m2 = n2._gen === 0 ? 0.01 : 1;
-                        n1._x += ox * m1; n1._y += oy * m1;
-                        n2._x -= ox * m2; n2._y -= oy * m2;
+                        var force = (minDist - dist) / dist * 0.35;
+                        var ox = dx * force;
+                        var oy = dy * force;
+
+                        var m1 = n1._gen === 0 ? 0.01 : 1;
+                        var m2 = n2._gen === 0 ? 0.01 : 1;
+
+                        n1._x += ox * m1;
+                        n1._y += oy * m1;
+                        n2._x -= ox * m2;
+                        n2._y -= oy * m2;
                         moved = true;
                     }
                 }
             }
+
+            // Apply wide-dome elliptical constraint for a balanced rounded canopy
             nodes.forEach(function (n) {
                 if (n.id !== ROOT.id) {
-                    var dx = n._x - ccx, dy = n._y - ccy;
-                    var ed = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
-                    if (ed > 1.0) { var s = 1.0 / Math.sqrt(ed); n._x = ccx + dx * s; n._y = ccy + dy * s; moved = true; }
+                    var dx = n._x - canopyCenterX;
+                    var dy = n._y - canopyCenterY;
+                    var ellipseDist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+                    if (ellipseDist > 1.0) {
+                        var scale = 1.0 / Math.sqrt(ellipseDist);
+                        n._x = canopyCenterX + dx * scale;
+                        n._y = canopyCenterY + dy * scale;
+                        moved = true;
+                    }
                 }
             });
+
+            // Clamp Y coordinates to stay above trunk top
             nodes.forEach(function (n) {
-                if (n.id !== ROOT.id) { var lim = ROOT._y + 20; if (n._y > lim) { n._y = lim; moved = true; } }
+                if (n.id !== ROOT.id) {
+                    var limitY = ROOT._y + 20;
+                    if (n._y > limitY) {
+                        n._y = limitY;
+                        moved = true;
+                    }
+                }
             });
             if (!moved) break;
         }
@@ -513,17 +575,18 @@
         var sweep = len * sf;
         var bs = dx < 0 ? 1 : -1;
         var side = bs * (0.45 + rng(nid, 'sd') * 0.55);
+        var steps = 8;
         var d = 'M' + x1 + ',' + y1;
         var ROOT = this._ROOT;
-        var steps = 12;
         for (var i = 1; i <= steps; i++) {
             var t = i / steps;
             var lx = x1 + dx * t, ly = y1 + dy * t;
             var bow = Math.sin(t * Math.PI) * sweep * side;
-            var grav = Math.sin(t * Math.PI) * (len * 0.05);
-            var wig = i < steps ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.045) : 0;
-            var cx = lx + px * (bow + wig), cy = ly + py * (bow + wig) + grav;
-            if (cy > ROOT._y + 30) cy = ROOT._y + 30;
+            var wig = i < steps ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.06) : 0;
+            var disp = bow + wig;
+            var cx = lx + px * disp, cy = ly + py * disp;
+            var maxAllowedY = ROOT._y + 30;
+            if (cy > maxAllowedY) cy = maxAllowedY;
             d += ' L' + cx + ',' + cy;
         }
         mkSVG('path', {
@@ -781,7 +844,7 @@
         var fz = Math.min(sw / this._SVG_W, sh / this._SVG_H) * 0.82;
         this._zoom = fz;
         this._panX = (sw - this._SVG_W * this._zoom) / 2;
-        this._panY = (sh - this._SVG_H * this._zoom) / 2;
+        this._panY = (sh - this._SVG_H * this._zoom) / 2 + 30;
         this._applyTransform(isSmooth);
     };
 
@@ -806,30 +869,74 @@
     FamilyTreeSVG.prototype.exportSVG = function () {
         var clone = this._els.svg.cloneNode(true);
         clone.removeAttribute('style');
-        var vpClone = clone.children[0]?.children[1] ? clone.children[0] : clone.querySelector('g');
-        // Remove bg
-        if (vpClone && vpClone.children[0]) vpClone.children[0].remove();
+        clone.removeAttribute('class');
         clone.querySelectorAll('.collapse-btn').forEach(function (el) { el.remove(); });
+        var vpClone = clone.querySelector('#vp') || clone.querySelector('g');
         if (vpClone) vpClone.removeAttribute('transform');
         clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        clone.style.position = 'absolute'; clone.style.top = '-9999px'; clone.style.left = '-9999px'; clone.style.visibility = 'hidden';
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        clone.style.position = 'absolute';
+        clone.style.top = '-99999px';
+        clone.style.left = '-99999px';
+        clone.style.visibility = 'hidden';
         document.body.appendChild(clone);
         var bbox = { x: 0, y: 0, width: this._SVG_W, height: this._SVG_H };
-        try { bbox = vpClone.getBBox(); } catch (e) {}
+        try {
+            if (vpClone && typeof vpClone.getBBox === 'function') {
+                var b = vpClone.getBBox();
+                if (b && b.width > 20 && b.height > 20 && !isNaN(b.x) && !isNaN(b.y)) {
+                    bbox = b;
+                }
+            }
+        } catch (e) {}
         document.body.removeChild(clone);
-        var p = 40;
-        var vx = bbox.x - p, vy = bbox.y - p, vw = bbox.width + p * 2, vh = bbox.height + p * 2;
-        if (isNaN(vx) || vw <= 0) { vx = 0; vy = 0; vw = this._SVG_W; vh = this._SVG_H; }
+
+        var padding = 60;
+        var vx = Math.round(bbox.x - padding);
+        var vy = Math.round(bbox.y - padding);
+        var vw = Math.round(bbox.width + padding * 2);
+        var vh = Math.round(bbox.height + padding * 2);
+        if (isNaN(vx) || isNaN(vy) || isNaN(vw) || isNaN(vh) || vw <= 0 || vh <= 0) {
+            vx = 0; vy = 0; vw = Math.round(this._SVG_W || 3000); vh = Math.round(this._SVG_H || 2200);
+        }
+
+        var bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bgRect.setAttribute('x', vx);
+        bgRect.setAttribute('y', vy);
+        bgRect.setAttribute('width', vw);
+        bgRect.setAttribute('height', vh);
+        bgRect.setAttribute('fill', '#ffffff');
+        if (vpClone) {
+            clone.insertBefore(bgRect, vpClone);
+        } else {
+            clone.appendChild(bgRect);
+        }
+
         clone.setAttribute('viewBox', vx + ' ' + vy + ' ' + vw + ' ' + vh);
-        clone.setAttribute('width', vw); clone.setAttribute('height', vh);
-        clone.style.position = ''; clone.style.top = ''; clone.style.left = ''; clone.style.visibility = '';
-        var s = new XMLSerializer().serializeToString(clone);
-        if (!s.startsWith('<?xml')) s = '<?xml version="1.0" standalone="no"?>\r\n' + s;
-        var blob = new Blob([s], { type: 'image/svg+xml;charset=utf-8' });
+        clone.setAttribute('width', vw);
+        clone.setAttribute('height', vh);
+        clone.style.position = '';
+        clone.style.top = '';
+        clone.style.left = '';
+        clone.style.visibility = '';
+
+        var serializer = new XMLSerializer();
+        var svgString = serializer.serializeToString(clone);
+        if (!svgString.startsWith('<?xml')) {
+            svgString = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\r\n' + svgString;
+        }
+        var blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
-        a.download = ((this._ROOT.family_name || this._ROOT.full_name || 'family') + '_tree.svg').toLowerCase().replace(/\s+/g, '_');
-        a.href = url; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        var familyName = 'family';
+        if (this._ROOT) {
+            familyName = (this._ROOT.family_name || this._ROOT.full_name || this._ROOT.name || 'family').toLowerCase().replace(/\s+/g, '_');
+        }
+        a.download = familyName + '_tree.svg';
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
 
