@@ -137,6 +137,16 @@
         this._buildDOM();
         this._bindEvents();
 
+        if (typeof ResizeObserver !== 'undefined') {
+            var selfRo = this;
+            this._ro = new ResizeObserver(function () {
+                if (selfRo._els && selfRo._els.stage && selfRo._els.stage.clientWidth > 0) {
+                    selfRo.fitView(false);
+                }
+            });
+            this._ro.observe(this._container);
+        }
+
         if (data) {
             var d = Array.isArray(data) ? data[0] : data;
             this._preprocess(d, new Set());
@@ -145,15 +155,9 @@
             this._autoCollapse(d);
             this.render();
             var self = this;
-            this.fitView(false);
-            if (typeof requestAnimationFrame !== 'undefined') {
-                requestAnimationFrame(function () {
-                    self.fitView(false);
-                    setTimeout(function () { self.fitView(false); }, 60);
-                });
-            } else {
-                setTimeout(function () { self.fitView(false); }, 60);
-            }
+            self.fitView(false);
+            setTimeout(function () { self.fitView(false); }, 60);
+            setTimeout(function () { self.fitView(false); }, 200);
         }
     }
 
@@ -317,184 +321,95 @@
         node._gen = gen;
         this._nodeMap[node.id] = node;
         var kids = this._collapsed[node.id] ? [] : (node.children || []);
-        var realKids = kids.filter(function (k) { return !k._isPartner; });
-        var partners = kids.filter(function (k) { return k._isPartner; });
+        if (!kids.length) { node._sw = 1; return; }
         var self = this;
-        partners.forEach(function (p) {
-            p._gen = gen;
-            p._sw = 0;
-            self._nodeMap[p.id] = p;
-        });
-        if (!realKids.length) { node._sw = 1; return; }
-        realKids.forEach(function (k) { self._pass1(k, gen + 1); });
-        var s = 0; realKids.forEach(function (k) { s += k._sw; });
-        node._sw = Math.max(1, s);
+        kids.forEach(function (k) { self._pass1(k, gen + 1); });
+        var s = 0; kids.forEach(function (k) { s += k._sw; });
+        node._sw = s;
     };
 
     FamilyTreeSVG.prototype._pass2 = function (node, startX, startY, endX, endY, angle, depth) {
         node._sx = startX; node._sy = startY; node._x = endX; node._y = endY;
         node._angle = angle; node._depth = depth;
-
         var kids = this._collapsed[node.id] ? [] : (node.children || []);
         if (!kids.length) return;
-
-        var realKids = kids.filter(function (k) { return !k._isPartner; });
-        var partners = kids.filter(function (k) { return k._isPartner; });
+        var depth2 = Math.min(depth + 1, this._SPREAD.length - 1);
+        var branchLen = this._BR_LEN[depth2] || 70;
+        var totalSW = 0; kids.forEach(function (k) { totalSW += k._sw; });
+        var totalSpread = this._SPREAD[depth2];
+        var minSp = [0, 140, 100, 82, 65, 52];
+        if (kids.length > 0) totalSpread = Math.max(totalSpread, minSp[depth2] || 52);
+        if (kids.length < 3) totalSpread = totalSpread * 1.35;
+        totalSpread = Math.min(240, totalSpread * Math.max(1, Math.pow(totalSW, 0.28) * 0.72));
+        if (depth === 0) totalSpread = Math.min(200, totalSpread);
+        var centerAngle = depth === 0 ? angle : angle * 0.62;
+        var startAngle = centerAngle - totalSpread / 2;
+        var offset = 0;
         var self = this;
         var ROOT = this._ROOT;
-
-        // Position partner nodes as attached companion leaves
-        partners.forEach(function (p, idx) {
-            var pOffset = angle < -10 ? -32 : (angle > 10 ? 32 : (idx % 2 === 0 ? -30 : 30));
-            var pAng = angle + pOffset;
-            var pDist = 58;
-            var pRad = (pAng - 90) * Math.PI / 180;
-            var px = endX + Math.cos(pRad) * pDist;
-            var py = endY + Math.sin(pRad) * pDist;
-            var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
-            if (py > limitY) py = limitY;
-            p._sx = endX; p._sy = endY; p._x = px; p._y = py;
-            p._angle = pAng; p._depth = depth;
-        });
-
-        if (!realKids.length) return;
-
-        var depthIdx = Math.min(depth + 1, self._SPREAD.length - 1);
-        var baseBranchLen = self._BR_LEN[depthIdx] || 85;
-        var totalSW = 0;
-        realKids.forEach(function (k) { totalSW += k._sw; });
-
-        // Fan spread: broad and lush at base, naturally proportioned in sub-branches
-        var totalSpread;
-        if (depth === 0) {
-            // Main boughs: spread across 130° to 155° for a full, majestic canopy base
-            totalSpread = Math.min(155, Math.max(120, (self._SPREAD[1] || 220) * 0.68));
-        } else {
-            // Sub-branches: fan proportionally around parent's upward direction
-            // Capped at 92° to ensure branches never cross opposite quadrants
-            var baseSp = self._SPREAD[depthIdx] || 75;
-            totalSpread = Math.min(92, Math.max(38, baseSp * 0.55 + Math.pow(totalSW, 0.32) * 16));
-        }
-
-        if (realKids.length < 3 && depth > 0) {
-            totalSpread = Math.min(85, totalSpread * 1.25);
-        }
-
-        // Pull child branches upwards naturally by scaling the parent's angle
-        var centerAngle = depth === 0 ? angle : angle * 0.65;
-        var startAngle = centerAngle - totalSpread / 2;
-
-        if (realKids.length === 1) {
-            var k = realKids[0];
-            var kidAngle = centerAngle + (rng(k.id, 'j') - 0.5) * 6;
-            kidAngle = Math.max(-82, Math.min(82, kidAngle));
-            var swMul = Math.max(0.92, Math.min(1.24, Math.pow(k._sw, 0.22)));
-            var lenVar = baseBranchLen * (0.92 + rng(k.id, 'l') * 0.18) * swMul;
-            var rad = (kidAngle - 90) * Math.PI / 180;
-            var kex = endX + Math.cos(rad) * lenVar;
-            var key = endY + Math.sin(rad) * lenVar;
-            var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
-            if (key > limitY) key = limitY;
-            self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1);
-            return;
-        }
-
-        var offset = 0;
-        realKids.forEach(function (k) {
+        kids.forEach(function (k) {
             var frac = k._sw / totalSW;
             var kidAngle = startAngle + (offset + frac * 0.5) * totalSpread;
             offset += frac;
-
-            // Organic angular jitter
-            kidAngle += (rng(k.id, 'j') - 0.5) * 6;
-            kidAngle = Math.max(-82, Math.min(82, kidAngle));
-
-            var swMul = Math.max(0.90, Math.min(1.25, Math.pow(k._sw, 0.22)));
-            var lenVar = baseBranchLen * (0.88 + rng(k.id, 'l') * 0.24) * swMul;
+            if (k._isPartner) kidAngle = angle - 22;
+            else kidAngle += (rng(k.id, 'j') - .5) * 8;
+            if (!k._isPartner) kidAngle = Math.max(-82, Math.min(82, kidAngle));
+            var swMul = Math.max(1, Math.pow(k._sw, 0.28) * 0.72);
+            var lenVar = branchLen * (k._isPartner ? 0.32 : (0.88 + rng(k.id, 'l') * 0.26)) * swMul;
             var rad = (kidAngle - 90) * Math.PI / 180;
             var kex = endX + Math.cos(rad) * lenVar;
             var key = endY + Math.sin(rad) * lenVar;
             var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
             if (key > limitY) key = limitY;
-
             self._pass2(k, endX, endY, kex, key, kidAngle, depth + 1);
         });
     };
 
     FamilyTreeSVG.prototype._resolveOverlaps = function () {
         var nodes = Object.values(this._nodeMap);
-        var LW = this._LW, ROOT = this._ROOT;
-        var iterations = 75;
-
-        // Wide dome ellipse constraint for a lush, balanced rounded canopy edge
         var N = nodes.length;
         var R = Math.max(520, Math.min(1200, Math.sqrt(N) * 135));
-        var rx = R * 1.55;  // wide horizontally for dome shape
-        var ry = R * 0.88;  // tall vertically to cover canopy
-        var canopyCenterX = ROOT._x;
-        var canopyCenterY = ROOT._y - ry * 0.52;
-
-        for (var it = 0; it < iterations; it++) {
+        var rx = R * 1.6, ry = R * 0.85;
+        var ccx = this._ROOT._x, ccy = this._ROOT._y - ry * 0.52;
+        var LW = this._LW, ROOT = this._ROOT;
+        for (var it = 0; it < 80; it++) {
             var moved = false;
             for (var j = 0; j < nodes.length; j++) {
                 for (var k = j + 1; k < nodes.length; k++) {
                     var n1 = nodes[j], n2 = nodes[k];
-                    if (n1.id === ROOT.id || n2.id === ROOT.id) continue;
-
                     var dx = n1._x - n2._x, dy = n1._y - n2._y;
                     var d2 = dx * dx + dy * dy;
-                    var sc1 = n1._gen === 0 ? 1.45 : n1._gen === 1 ? 1.18 : n1._gen === 2 ? 1.02 : 0.90;
-                    var sc2 = n2._gen === 0 ? 1.45 : n2._gen === 1 ? 1.18 : n2._gen === 2 ? 1.02 : 0.90;
+                    var sc1 = n1._gen === 0 ? 1.5 : n1._gen === 1 ? 1.18 : n1._gen === 2 ? 1.02 : 0.90;
+                    var sc2 = n2._gen === 0 ? 1.5 : n2._gen === 1 ? 1.18 : n2._gen === 2 ? 1.02 : 0.90;
                     if (n1._isPartner) sc1 *= 0.85;
                     if (n2._isPartner) sc2 *= 0.85;
-                    var r1 = LW * sc1 * 0.62;
-                    var r2 = LW * sc2 * 0.62;
-
-                    var isPartner = (n1.children && n1.children.some(function (c) { return c.id === n2.id && n2._isPartner; })) ||
-                                    (n2.children && n2.children.some(function (c) { return c.id === n1.id && n1._isPartner; }));
+                    var r1 = LW * sc1 * 0.65, r2 = LW * sc2 * 0.65;
                     var isSib = (n1._sx === n2._sx && n1._sy === n2._sy);
-                    var pad = isPartner ? 14 : (isSib ? 48 : 28);
-                    var minD = (isPartner ? (r1 + r2) * 0.68 : (r1 + r2)) + pad;
-
-                    if (d2 < minD * minD && d2 > 0) {
+                    var pad = isSib ? 65 : 35;
+                    var minD = r1 + r2 + pad;
+                    if (n1.children && n1.children.some(function (c) { return c.id === n2.id && n2._isPartner; })) minD = (r1 + r2) * 0.7;
+                    if (n2.children && n2.children.some(function (c) { return c.id === n1.id && n1._isPartner; })) minD = (r1 + r2) * 0.7;
+                    if (d2 < minD * minD) {
                         var dist = Math.sqrt(d2) || 0.1;
-                        var force = (minD - dist) / dist * 0.26;
+                        var force = (minD - dist) / dist * 0.35;
                         var ox = dx * force, oy = dy * force;
-                        var m1 = n1._isPartner ? 0.25 : 1.0;
-                        var m2 = n2._isPartner ? 0.25 : 1.0;
+                        var m1 = n1._gen === 0 ? 0.01 : 1, m2 = n2._gen === 0 ? 0.01 : 1;
                         n1._x += ox * m1; n1._y += oy * m1;
                         n2._x -= ox * m2; n2._y -= oy * m2;
                         moved = true;
                     }
                 }
             }
-
-            // Apply wide-dome elliptical constraint for a balanced rounded canopy edge
             nodes.forEach(function (n) {
                 if (n.id !== ROOT.id) {
-                    var edx = n._x - canopyCenterX;
-                    var edy = n._y - canopyCenterY;
-                    var ellipseDist = (edx * edx) / (rx * rx) + (edy * edy) / (ry * ry);
-                    if (ellipseDist > 1.0) {
-                        var scale = 1.0 / Math.sqrt(ellipseDist);
-                        n._x = canopyCenterX + edx * scale;
-                        n._y = canopyCenterY + edy * scale;
-                        moved = true;
-                    }
+                    var dx = n._x - ccx, dy = n._y - ccy;
+                    var ed = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+                    if (ed > 1.0) { var s = 1.0 / Math.sqrt(ed); n._x = ccx + dx * s; n._y = ccy + dy * s; moved = true; }
                 }
             });
-
-            // Clamp Y coordinates to stay above trunk top
             nodes.forEach(function (n) {
-                if (n.id !== ROOT.id) {
-                    var limitY = ROOT._y + 20;
-                    if (n._y > limitY) {
-                        n._y = limitY;
-                        moved = true;
-                    }
-                }
+                if (n.id !== ROOT.id) { var lim = ROOT._y + 20; if (n._y > lim) { n._y = lim; moved = true; } }
             });
-
             if (!moved) break;
         }
     };
@@ -516,8 +431,8 @@
 
     FamilyTreeSVG.prototype._drawBg = function (rx, groundY) {
         this._els.gBg.innerHTML = '';
-        var groundRx = Math.max(220, Math.min(560, 160 + this._countMembers(this._ROOT) * 4));
-        mkSVG('ellipse', { cx: rx, cy: groundY + 10, rx: groundRx, ry: 48, fill: '#d6a661', opacity: '0.45' }, this._els.gBg);
+        var groundRx = Math.max(200, Math.min(550, 150 + this._countMembers(this._ROOT) * 4));
+        mkSVG('ellipse', { cx: rx, cy: groundY + 14, rx: groundRx, ry: 65, fill: '#d6a661', opacity: '0.4' }, this._els.gBg);
     };
 
     FamilyTreeSVG.prototype._drawTrunk = function (rx, groundY, topY) {
@@ -586,24 +501,18 @@
         var dx = x2 - x1, dy = y2 - y1;
         var len = Math.sqrt(dx * dx + dy * dy) || 1;
         var px = -dy / len, py = dx / len;
-
-        // Sweep (curviness) scales naturally with branch length
-        var sweepFactor = isP ? 0.05 : (0.16 + rng(nid, 'sw') * 0.12);
-        var sweep = len * sweepFactor;
-
-        // Natural upward curving
-        var biasSide = dx < 0 ? 1 : -1;
-        var side = biasSide * (0.45 + rng(nid, 'sd') * 0.55);
-
-        // Multi-segment wobbly path — gnarly living wood with rounded joints
-        var steps = 8;
+        var sf = isP ? 0.05 : (0.16 + rng(nid, 'sw') * 0.12);
+        var sweep = len * sf;
+        var bs = dx < 0 ? 1 : -1;
+        var side = bs * (0.45 + rng(nid, 'sd') * 0.55);
         var d = 'M' + x1 + ',' + y1;
         var ROOT = this._ROOT;
+        var steps = 12;
         for (var i = 1; i <= steps; i++) {
             var t = i / steps;
             var lx = x1 + dx * t, ly = y1 + dy * t;
             var bow = Math.sin(t * Math.PI) * sweep * side;
-            var wig = (i < steps) ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.055) : 0;
+            var wig = i < steps ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.05) : 0;
             var cx = lx + px * (bow + wig), cy = ly + py * (bow + wig);
             if (cy > ROOT._y + 30) cy = ROOT._y + 30;
             d += ' L' + cx + ',' + cy;
@@ -643,7 +552,7 @@
         if (node._isPartner) sc *= 0.85;
         var w = this._LW * sc, h = this._LH * sc, cx = node._x, cy = node._y, ang = node._angle || 0;
         var g = mkSVG('g', { 'data-id': node.id, cursor: 'pointer' }, this._els.gLv);
-        var gid = 'lg_' + this._uid + '_' + node.id;
+        var gid = 'lg_' + node.id;
         var defs = this._els.svg.querySelector('defs');
         if (!defs.querySelector('#' + gid)) {
             var lg = mkSVG('linearGradient', { id: gid, x1: '25%', y1: '0%', x2: '78%', y2: '100%' }, defs);
@@ -682,7 +591,7 @@
         var gi = Math.min(gen, this._LC.length - 1);
         var col = this._LC[gi];
         var g = mkSVG('g', { opacity: '0.72' }, this._els.gDeco);
-        var gid = 'dec_lg_' + this._uid + '_' + Math.floor(cx) + '_' + Math.floor(cy) + '_' + Math.floor(w);
+        var gid = 'dec_lg_' + Math.floor(cx) + '_' + Math.floor(cy) + '_' + Math.floor(w);
         var defs = this._els.svg.querySelector('defs');
         if (!defs.querySelector('#' + gid)) {
             var lg = mkSVG('linearGradient', { id: gid, x1: '25%', y1: '0%', x2: '78%', y2: '100%' }, defs);
@@ -725,16 +634,18 @@
         }
 
         // Twigs + sub-branches
+        var twigColor = this._branchColor;
+        var subTwigColor = darker(this._branchColor, 0.15);
         branches.forEach(function (b) {
             var num = Math.floor(rng(b.id, 'd_n') * 3) + 3;
             if (b.depth <= 2) num += 2;
             var dx = b.x2 - b.x1, dy = b.y2 - b.y1;
             var len = Math.sqrt(dx * dx + dy * dy) || 1;
             var px = -dy / len, py = dx / len;
-            var sf = b.isP ? 0.05 : (0.16 + rng(b.id, 'sw') * 0.12);
+            var sf = b.isP ? 0.04 : (0.10 + rng(b.id, 'sw') * 0.10);
             var sweep = len * sf;
             var bs = dx < 0 ? 1 : -1;
-            var side = bs * (0.45 + rng(b.id, 'sd') * 0.55);
+            var side = bs * (0.55 + rng(b.id, 'sd') * 0.35);
             for (var i = 0; i < num; i++) {
                 var t = 0.2 + (i / num) * 0.65;
                 var disp = Math.sin(t * Math.PI) * sweep * side;
@@ -745,7 +656,7 @@
                 var ta = (rng(b.id, 'twig_a' + i) - 0.5) * 0.6;
                 var tx = cx + (px * dir + ta) * tl, ty = cy + (py * dir - Math.abs(ta) * 0.3) * tl;
                 if (ty > ROOT._y + 30) ty = ROOT._y + 30;
-                mkSVG('line', { x1: cx, y1: cy, x2: tx, y2: ty, stroke: '#3a1f13', 'stroke-width': '1.5', 'stroke-linecap': 'round' }, gBr);
+                mkSVG('line', { x1: cx, y1: cy, x2: tx, y2: ty, stroke: twigColor, 'stroke-width': '1.5', 'stroke-linecap': 'round' }, gBr);
                 var scf = b.depth <= 2 ? 1.3 : 1.0;
                 var ls = (22 + rng(b.id, 'd_s' + i) * 10) * scf;
                 var la = Math.atan2(ty - cy, tx - cx) * 180 / Math.PI + 90;
@@ -756,7 +667,7 @@
                     var sx = tx + (px * sd * 0.7 + (rng(b.id, 'sub_a' + i) - 0.5) * 0.5) * sl;
                     var sy = ty + (py * sd * 0.7 - 0.3) * sl;
                     if (sy > ROOT._y + 30) sy = ROOT._y + 30;
-                    mkSVG('line', { x1: tx, y1: ty, x2: sx, y2: sy, stroke: '#4d2b1a', 'stroke-width': '1', 'stroke-linecap': 'round' }, gBr);
+                    mkSVG('line', { x1: tx, y1: ty, x2: sx, y2: sy, stroke: subTwigColor, 'stroke-width': '1', 'stroke-linecap': 'round' }, gBr);
                     var ss = 16 + rng(b.id, 'sub_s' + i) * 8;
                     var sa = Math.atan2(sy - ty, sx - tx) * 180 / Math.PI + 90;
                     self._drawDecLeaf(sx, sy, ss * 0.85, ss * 1.05, sa, Math.min(b.depth + 1, 5));
@@ -834,25 +745,20 @@
             x0 = Math.min(x0, n._x - LW); y0 = Math.min(y0, n._y - LH);
             x1 = Math.max(x1, n._x + LW); y1 = Math.max(y1, n._y + LH);
         });
-        var moundRx = Math.max(240, Math.min(580, 170 + mc * 4));
-        x0 = Math.min(x0, this._ROOT._x - moundRx);
-        x1 = Math.max(x1, this._ROOT._x + moundRx);
-        y1 = Math.max(y1, this._ROOT._y + this._TRUNK_H + 75);
-
-        var PAD = 80, ox = -x0 + PAD, oy = -y0 + PAD;
+        var PAD = 140, ox = -x0 + PAD, oy = -y0 + PAD;
         Object.keys(nm).forEach(function (id) {
             var n = nm[id]; n._x += ox; n._y += oy; n._sx += ox; n._sy += oy;
         });
-        this._SVG_W = Math.round((x1 - x0) + PAD * 2);
-        this._SVG_H = Math.round((y1 - y0) + PAD * 2);
+        this._SVG_W = (x1 - x0) + PAD * 2;
+        this._SVG_H = (y1 - y0) + PAD * 2 + 150;
         this._els.svg.setAttribute('width', this._SVG_W);
         this._els.svg.setAttribute('height', this._SVG_H);
         this._els.svg.style.width = this._SVG_W + 'px';
         this._els.svg.style.height = this._SVG_H + 'px';
 
         var groundY = this._ROOT._y + this._TRUNK_H;
-        this._drawBg(this._ROOT._x, groundY);
-        this._drawTrunk(this._ROOT._x, groundY, this._ROOT._y + LH * .45);
+        this._drawBg(this._ROOT._x, groundY + 50);
+        this._drawTrunk(this._ROOT._x, groundY + 25, this._ROOT._y + LH * .45);
         this._drawAllBranches(this._ROOT);
         this._drawDecorations();
         this._drawLeaf(this._ROOT);
@@ -860,10 +766,10 @@
 
     FamilyTreeSVG.prototype.fitView = function (smooth) {
         var isSmooth = smooth === true;
-        var sw = this._els.stage.clientWidth || this._container.clientWidth || window.innerWidth;
-        var sh = this._els.stage.clientHeight || this._container.clientHeight || window.innerHeight;
-        if (!sw || !sh || !this._SVG_W || !this._SVG_H) return;
-        var fz = Math.min(sw / this._SVG_W, sh / this._SVG_H) * 0.88;
+        var sw = (this._els && this._els.stage && this._els.stage.clientWidth) || this._container.clientWidth || 1000;
+        var sh = (this._els && this._els.stage && this._els.stage.clientHeight) || this._container.clientHeight || 650;
+        if (!this._SVG_W || !this._SVG_H) return;
+        var fz = Math.min(sw / this._SVG_W, sh / this._SVG_H) * 0.82;
         this._zoom = fz;
         this._panX = (sw - this._SVG_W * this._zoom) / 2;
         this._panY = (sh - this._SVG_H * this._zoom) / 2;
@@ -885,100 +791,44 @@
         this._autoCollapse(d);
         this.render();
         var self = this;
-        this.fitView(false);
-        setTimeout(function () { self.fitView(false); }, 60);
+        setTimeout(function () { self.fitView(); }, 90);
     };
 
-    FamilyTreeSVG.prototype.exportSVG = function (options) {
-        options = options || {};
-        var bgColor = options.background !== undefined ? options.background : "#ffffff";
-
+    FamilyTreeSVG.prototype.exportSVG = function () {
         var clone = this._els.svg.cloneNode(true);
-        clone.removeAttribute("style");
-
-        // Locate main viewport <g> (the container of the tree)
-        var vpClone = Array.from(clone.children).find(function (el) {
-            return el.tagName && el.tagName.toLowerCase() === "g";
-        }) || clone.querySelector("g");
-
-        // Remove pan/zoom transform so geometry is unscaled in its base coordinate space
-        if (vpClone) {
-            vpClone.removeAttribute("transform");
-        }
-
-        // Remove collapse buttons (+ / -) from export
-        clone.querySelectorAll(".collapse-btn").forEach(function (el) { el.remove(); });
-
-        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-        clone.style.position = "absolute";
-        clone.style.top = "-99999px";
-        clone.style.left = "-99999px";
-        clone.style.visibility = "hidden";
+        clone.removeAttribute('style');
+        var vpClone = clone.children[0]?.children[1] ? clone.children[0] : clone.querySelector('g');
+        // Remove bg
+        if (vpClone && vpClone.children[0]) vpClone.children[0].remove();
+        clone.querySelectorAll('.collapse-btn').forEach(function (el) { el.remove(); });
+        if (vpClone) vpClone.removeAttribute('transform');
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.style.position = 'absolute'; clone.style.top = '-9999px'; clone.style.left = '-9999px'; clone.style.visibility = 'hidden';
         document.body.appendChild(clone);
-
-        var bbox = null;
-        if (vpClone && typeof vpClone.getBBox === "function") {
-            try {
-                var b = vpClone.getBBox();
-                if (b && b.width > 20 && b.height > 20 && !isNaN(b.x) && !isNaN(b.y)) {
-                    bbox = b;
-                }
-            } catch (e) {}
-        }
+        var bbox = { x: 0, y: 0, width: this._SVG_W, height: this._SVG_H };
+        try { bbox = vpClone.getBBox(); } catch (e) {}
         document.body.removeChild(clone);
-
-        var p = 60;
-        var vx, vy, vw, vh;
-        if (bbox) {
-            vx = Math.round(bbox.x - p);
-            vy = Math.round(bbox.y - p);
-            vw = Math.round(bbox.width + p * 2);
-            vh = Math.round(bbox.height + p * 2);
-        } else {
-            vx = 0;
-            vy = 0;
-            vw = Math.round(this._SVG_W || 3000);
-            vh = Math.round(this._SVG_H || 2200);
-        }
-
-        // Add solid background so it does not render black/transparent in image viewers
-        if (bgColor && bgColor !== "transparent" && bgColor !== "none") {
-            var bgRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            bgRect.setAttribute("x", vx);
-            bgRect.setAttribute("y", vy);
-            bgRect.setAttribute("width", vw);
-            bgRect.setAttribute("height", vh);
-            bgRect.setAttribute("fill", bgColor);
-            if (vpClone) {
-                clone.insertBefore(bgRect, vpClone);
-            } else {
-                clone.appendChild(bgRect);
-            }
-        }
-
-        clone.setAttribute("viewBox", vx + " " + vy + " " + vw + " " + vh);
-        clone.setAttribute("width", vw);
-        clone.setAttribute("height", vh);
-        clone.style.position = "";
-        clone.style.top = "";
-        clone.style.left = "";
-        clone.style.visibility = "";
-
+        var p = 40;
+        var vx = bbox.x - p, vy = bbox.y - p, vw = bbox.width + p * 2, vh = bbox.height + p * 2;
+        if (isNaN(vx) || vw <= 0) { vx = 0; vy = 0; vw = this._SVG_W; vh = this._SVG_H; }
+        clone.setAttribute('viewBox', vx + ' ' + vy + ' ' + vw + ' ' + vh);
+        clone.setAttribute('width', vw); clone.setAttribute('height', vh);
+        clone.style.position = ''; clone.style.top = ''; clone.style.left = ''; clone.style.visibility = '';
         var s = new XMLSerializer().serializeToString(clone);
-                if (!s.startsWith('<?xml')) s = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\r\n' + s;
-        var blob = new Blob([s], { type: "image/svg+xml;charset=utf-8" });
+        if (!s.startsWith('<?xml')) s = '<?xml version="1.0" standalone="no"?>\r\n' + s;
+        var blob = new Blob([s], { type: 'image/svg+xml;charset=utf-8' });
         var url = URL.createObjectURL(blob);
-        var a = document.createElement("a");
-        a.download = ((this._ROOT.family_name || this._ROOT.full_name || "family") + "_tree.svg").toLowerCase().replace(/\s+/g, "_");
-        a.href = url;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        var a = document.createElement('a');
+        a.download = ((this._ROOT.family_name || this._ROOT.full_name || 'family') + '_tree.svg').toLowerCase().replace(/\s+/g, '_');
+        a.href = url; document.body.appendChild(a); a.click(); document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
 
     FamilyTreeSVG.prototype.destroy = function () {
+        if (this._ro) {
+            this._ro.disconnect();
+            this._ro = null;
+        }
         window.removeEventListener('mousemove', this._onMouseMove);
         window.removeEventListener('mouseup', this._onMouseUp);
         window.removeEventListener('touchmove', this._onTouchMove);
