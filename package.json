@@ -1,11 +1,12 @@
 {
   "name": "family-tree-svg",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pure organic SVG family tree visualization from JSON data — with leaves, branches, trunk, customizable colors, pan/zoom, and export.",
   "main": "src/family-tree-svg.js",
   "files": [
     "src/",
-    "README.md"
+    "README.md",
+    "assets/"
   ],
   "scripts": {
     "demo": "npx -y serve demo"
