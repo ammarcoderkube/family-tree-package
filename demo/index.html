@@ -3,83 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Tree SVG — Demo</title>
+    <title>Family Tree SVG — Interactive Showcase</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { width: 100vw; height: 100vh; overflow: hidden; }
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f7f5f0;
+        }
         #tree { width: 100%; height: 100%; }
+
+        /* Floating Premium Glass Control Panel */
+        #control-panel {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 500;
+            background: rgba(36, 20, 11, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid #d6a661;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #f9f3e0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 480px;
+            font-size: 11.5px;
+        }
+
+        .cp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(214, 166, 97, 0.35);
+            padding-bottom: 6px;
+        }
+        .cp-header h1 {
+            font-family: Georgia, serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: #d6a661;
+            letter-spacing: 0.5px;
+        }
+
+        .cp-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .cp-label {
+            font-weight: 600;
+            color: #d6a661;
+            min-width: 80px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .c-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: #f9f3e0;
+            border: 1px solid rgba(214, 166, 97, 0.4);
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .c-btn:hover {
+            background: rgba(214, 166, 97, 0.25);
+            border-color: #d6a661;
+        }
+        .c-btn.active {
+            background: #d6a661;
+            color: #24140b;
+            font-weight: 700;
+            border-color: #f9f3e0;
+            box-shadow: 0 2px 8px rgba(214, 166, 97, 0.4);
+        }
+
+        .action-btn {
+            background: #d6a661;
+            color: #24140b;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .action-btn:hover {
+            background: #fffdf5;
+            box-shadow: 0 2px 10px rgba(214, 166, 97, 0.5);
+        }
     </style>
 </head>
 <body>
+    <div id="control-panel">
+        <div class="cp-header">
+            <h1>🌳 FamilyTreeSVG Engine</h1>
+            <div style="display:flex; gap:6px;">
+                <button class="action-btn" onclick="tree.fitView(true)">Fit View</button>
+                <button class="action-btn" onclick="tree.exportSVG()">Export SVG</button>
+            </div>
+        </div>
+
+        <!-- Branch Styles -->
+        <div class="cp-row">
+            <span class="cp-label">Branch:</span>
+            <div class="btn-group" id="bg-branch">
+                <button class="c-btn active" onclick="setBranch('woodcut', this)">⭐ Woodcut Sap</button>
+                <button class="c-btn" onclick="setBranch('gnarled', this)">🪵 Gnarled Rustic</button>
+                <button class="c-btn" onclick="setBranch('classic', this)">〰️ Classic Smooth</button>
+            </div>
+        </div>
+
+        <!-- Trunk Styles -->
+        <div class="cp-row">
+            <span class="cp-label">Trunk:</span>
+            <div class="btn-group" id="bg-trunk">
+                <button class="c-btn active" onclick="setTrunk('calligraphic', this)">⭐ Elegant S-Curve (Original)</button>
+                <button class="c-btn" onclick="setTrunk('gnarled_veteran', this)">🪵 Gnarled Knotted Veteran</button>
+            </div>
+        </div>
+
+        <!-- Leaf Shapes -->
+        <div class="cp-row">
+            <span class="cp-label">Leaf Shape:</span>
+            <div class="btn-group" id="bg-leaf">
+                <button class="c-btn active" onclick="setLeaf('laurel', this)">🍃 Classical Laurel</button>
+                <button class="c-btn" onclick="setLeaf('oval', this)">🟢 Imperial Oval</button>
+                <button class="c-btn" onclick="setLeaf('oak', this)">🌳 Royal Oak</button>
+            </div>
+        </div>
+
+        <!-- Leaf Render Mode -->
+        <div class="cp-row">
+            <span class="cp-label">Leaf Mode:</span>
+            <div class="btn-group" id="bg-mode">
+                <button class="c-btn active" onclick="setMode('svg', this)">Pure Vector SVG</button>
+                <button class="c-btn" onclick="setMode('png', this)">🖼️ Textured PNG Asset</button>
+            </div>
+        </div>
+
+        <!-- Color Themes -->
+        <div class="cp-row">
+            <span class="cp-label">Palette:</span>
+            <div class="btn-group" id="bg-colors">
+                <button class="c-btn active" onclick="setTheme('#17361a','#3a1f13','#2d1607', this)">🌲 Emerald</button>
+                <button class="c-btn" onclick="setTheme('#dfa467','#4d2b1a','#3d1d11', this)">🍂 Autumn</button>
+                <button class="c-btn" onclick="setTheme('#a35c6a','#5e3b25','#4a2c16', this)">🌸 Cherry</button>
+                <button class="c-btn" onclick="setTheme('#2a6b5c','#2d3e50','#1f2937', this)">❄️ Pine</button>
+                <button class="c-btn" onclick="setTheme('#d67b45','#4d2b1a','#2d1607', this)">🌅 Sunset</button>
+            </div>
+        </div>
+    </div>
+
     <div id="tree"></div>
 
     <script src="../src/family-tree-svg.js"></script>
     <script>
-        // Just pass JSON + colors as arguments — that's it!
-        var tree = FamilyTreeSVG.create('#tree', {
-  "full_name": "Ahmed Khan",
-  "family_name": "Khan",
-  "partners": [
-    {
-      "full_name": "Fatima Ahmed",
-      "family_name": "Khan"
-    }
-  ],
-  "children": [
-    {
-      "full_name": "Yusuf Ahmed",
-      "family_name": "Khan",
-      "partners": [
-        {
-          "full_name": "Ayesha Yusuf",
-          "family_name": "Khan"
-        }
-      ],
-      "children": [
-        {
-          "full_name": "Hamza Yusuf",
+        var familyData = {
+          "full_name": "Ahmed Khan",
           "family_name": "Khan",
           "partners": [
-            {
-              "full_name": "Sana Hamza",
-              "family_name": "Khan"
-            }
+            { "full_name": "Fatima Ahmed", "family_name": "Khan" }
           ],
           "children": [
             {
-              "full_name": "Ali Hamza",
+              "full_name": "Yusuf Ahmed",
               "family_name": "Khan",
               "partners": [
-                {
-                  "full_name": "Zoya Ali",
-                  "family_name": "Khan"
-                }
+                { "full_name": "Ayesha Yusuf", "family_name": "Khan" }
               ],
               "children": [
                 {
-                  "full_name": "Rayyan Ali",
+                  "full_name": "Hamza Yusuf",
                   "family_name": "Khan",
                   "partners": [
-                    {
-                      "full_name": "Noor Rayyan",
-                      "family_name": "Khan"
-                    }
+                    { "full_name": "Sana Hamza", "family_name": "Khan" }
                   ],
                   "children": [
                     {
-                      "full_name": "Ibrahim Rayyan",
+                      "full_name": "Ali Hamza",
+                      "family_name": "Khan",
+                      "partners": [
+                        { "full_name": "Zoya Ali", "family_name": "Khan" }
+                      ],
+                      "children": [
+                        {
+                          "full_name": "Rayyan Ali",
+                          "family_name": "Khan",
+                          "partners": [
+                            { "full_name": "Noor Rayyan", "family_name": "Khan" }
+                          ],
+                          "children": [
+                            { "full_name": "Ibrahim Rayyan", "family_name": "Khan", "partners": [], "children": [] },
+                            { "full_name": "Mariam Rayyan", "family_name": "Khan", "partners": [], "children": [] },
+                            { "full_name": "Ayaan Rayyan", "family_name": "Khan", "partners": [], "children": [] }
+                          ]
+                        },
+                        {
+                          "full_name": "Hiba Ali",
+                          "family_name": "Khan",
+                          "partners": [],
+                          "children": []
+                        }
+                      ]
+                    },
+                    {
+                      "full_name": "Amina Hamza",
                       "family_name": "Khan",
                       "partners": [],
                       "children": []
                     },
                     {
-                      "full_name": "Mariam Rayyan",
-                      "family_name": "Khan",
-                      "partners": [],
-                      "children": []
-                    },
-                    {
-                      "full_name": "Ayaan Rayyan",
+                      "full_name": "Bilal Hamza",
                       "family_name": "Khan",
                       "partners": [],
                       "children": []
@@ -87,226 +237,90 @@
                   ]
                 },
                 {
-                  "full_name": "Hiba Ali",
+                  "full_name": "Usman Yusuf",
                   "family_name": "Khan",
-                  "partners": [],
-                  "children": []
+                  "partners": [
+                    { "full_name": "Iqra Usman", "family_name": "Khan" }
+                  ],
+                  "children": [
+                    { "full_name": "Danish Usman", "family_name": "Khan", "partners": [], "children": [] },
+                    { "full_name": "Areeba Usman", "family_name": "Khan", "partners": [], "children": [] },
+                    { "full_name": "Huzaifa Usman", "family_name": "Khan", "partners": [], "children": [] }
+                  ]
+                },
+                {
+                  "full_name": "Mariam Yusuf",
+                  "family_name": "Khan",
+                  "partners": [
+                    { "full_name": "Salman Mariam", "family_name": "Khan" }
+                  ],
+                  "children": [
+                    { "full_name": "Zainab Salman", "family_name": "Khan", "partners": [], "children": [] },
+                    { "full_name": "Farhan Salman", "family_name": "Khan", "partners": [], "children": [] }
+                  ]
                 }
               ]
             },
             {
-              "full_name": "Amina Hamza",
+              "full_name": "Zainab Ahmed",
               "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Bilal Hamza",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
+              "partners": [
+                { "full_name": "Tariq Zainab", "family_name": "Khan" }
+              ],
+              "children": [
+                { "full_name": "Saad Tariq", "family_name": "Khan", "partners": [], "children": [] },
+                { "full_name": "Sara Tariq", "family_name": "Khan", "partners": [], "children": [] }
+              ]
             }
           ]
-        },
-        {
-          "full_name": "Usman Yusuf",
-          "family_name": "Khan",
-          "partners": [
-            {
-              "full_name": "Iqra Usman",
-              "family_name": "Khan"
+        };
+
+        // Initialize with default rich styles
+        var tree = FamilyTreeSVG.create('#tree', familyData, {
+            leafColor: '#17361a',
+            branchColor: '#3a1f13',
+            trunkColor: '#2d1607',
+            branchStyle: 'woodcut',
+            trunkStyle: 'calligraphic',
+            leafStyle: 'laurel',
+            leafRenderMode: 'svg',
+            leafPngUrls: {
+                laurel: '../assets/leaf_laurel.png',
+                oval: '../assets/leaf_oval.png',
+                oak: '../assets/leaf_oak.png'
             }
-          ],
-          "children": [
-            {
-              "full_name": "Danish Usman",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Areeba Usman",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Huzaifa Usman",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            }
-          ]
-        },
-        {
-          "full_name": "Mariam Yusuf",
-          "family_name": "Khan",
-          "partners": [
-            {
-              "full_name": "Salman Mariam",
-              "family_name": "Khan"
-            }
-          ],
-          "children": [
-            {
-              "full_name": "Arham Salman",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Anaya Salman",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "full_name": "Imran Ahmed",
-      "family_name": "Khan",
-      "partners": [
-        {
-          "full_name": "Nazia Imran",
-          "family_name": "Khan"
-        }
-      ],
-      "children": [
-        {
-          "full_name": "Faizan Imran",
-          "family_name": "Khan",
-          "partners": [
-            {
-              "full_name": "Saba Faizan",
-              "family_name": "Khan"
-            }
-          ],
-          "children": [
-            {
-              "full_name": "Taha Faizan",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Aqsa Faizan",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Rizwan Faizan",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            }
-          ]
-        },
-        {
-          "full_name": "Zubair Imran",
-          "family_name": "Khan",
-          "partners": [
-            {
-              "full_name": "Khadija Zubair",
-              "family_name": "Khan"
-            }
-          ],
-          "children": [
-            {
-              "full_name": "Sameer Zubair",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Laiba Zubair",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Rehan Zubair",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "full_name": "Suleman Ahmed",
-      "family_name": "Khan",
-      "partners": [
-        {
-          "full_name": "Rukhsar Suleman",
-          "family_name": "Khan"
-        }
-      ],
-      "children": [
-        {
-          "full_name": "Adnan Suleman",
-          "family_name": "Khan",
-          "partners": [
-            {
-              "full_name": "Nimra Adnan",
-              "family_name": "Khan"
-            }
-          ],
-          "children": [
-            {
-              "full_name": "Talha Adnan",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Hoorain Adnan",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            }
-          ]
-        },
-        {
-          "full_name": "Farhan Suleman",
-          "family_name": "Khan",
-          "partners": [
-            {
-              "full_name": "Sidra Farhan",
-              "family_name": "Khan"
-            }
-          ],
-          "children": [
-            {
-              "full_name": "Aadil Farhan",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            },
-            {
-              "full_name": "Mahnoor Farhan",
-              "family_name": "Khan",
-              "partners": [],
-              "children": []
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}, {
-            // Color options — pass your own hex colors!
-            leafColor: '#17361a',      // green leaves
-            branchColor: '#3a1f13',    // dark brown branches
-            trunkColor: '#2d1607'      // deep brown trunk
         });
 
-        // You can also change colors later:
-        // tree.setColors('#dfa467', '#4d2b1a', '#3d1d11');  // golden autumn
-        // tree.setColors('#a35c6a', '#5e3b25', '#4a2c16');  // cherry blossom
+        function setBranch(style, btn) {
+            tree.setBranchStyle(style);
+            setActiveBtn('#bg-branch', btn);
+        }
+
+        function setTrunk(style, btn) {
+            tree.setTrunkStyle(style);
+            setActiveBtn('#bg-trunk', btn);
+        }
+
+        function setLeaf(style, btn) {
+            tree.setLeafStyle(style);
+            setActiveBtn('#bg-leaf', btn);
+        }
+
+        function setMode(mode, btn) {
+            tree.setLeafRenderMode(mode);
+            setActiveBtn('#bg-mode', btn);
+        }
+
+        function setTheme(l, b, t, btn) {
+            tree.setColors(l, b, t);
+            setActiveBtn('#bg-colors', btn);
+        }
+
+        function setActiveBtn(groupSel, activeBtn) {
+            document.querySelectorAll(groupSel + ' .c-btn').forEach(function(b) {
+                b.classList.toggle('active', b === activeBtn);
+            });
+        }
     </script>
 </body>
 </html>

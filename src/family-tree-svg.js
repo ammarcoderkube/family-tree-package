@@ -5,7 +5,11 @@
  *   FamilyTreeSVG.create('#container', familyData, {
  *     leafColor: '#17361a',
  *     branchColor: '#3a1f13',
- *     trunkColor: '#2d1607'
+ *     trunkColor: '#2d1607',
+ *     branchStyle: 'woodcut',   // 'woodcut' | 'gnarled' | 'classic'
+ *     trunkStyle: 'calligraphic', // 'calligraphic' | 'gnarled_veteran'
+ *     leafStyle: 'laurel',      // 'laurel' | 'oval' | 'oak'
+ *     leafRenderMode: 'svg'     // 'svg' | 'png'
  *   });
  */
 (function (root, factory) {
@@ -20,7 +24,7 @@
     'use strict';
 
     // ═══════════════════════════════════════════════
-    //  MINIMAL CSS (just for pan/zoom cursor)
+    //  CSS (pan/zoom cursor & living woodcut glow)
     // ═══════════════════════════════════════════════
     var CSS_INJECTED = false;
     function injectCSS() {
@@ -44,6 +48,15 @@
     cursor: grab;
 }
 .fts-stage.dragging { cursor: grabbing; }
+.woodcut-sap-line {
+    opacity: 0.75;
+}
+.collapse-btn {
+    transition: transform 0.15s ease-out;
+}
+.collapse-btn:hover {
+    transform: scale(1.2);
+}
 `;
         document.head.appendChild(style);
         CSS_INJECTED = true;
@@ -90,13 +103,51 @@
         for (var i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
         return ((Math.sin(h + 1) * 43758.5453123) % 1 + 1) % 1;
     }
-    function leafD(ox, oy, w, h) {
-        var hw = w / 2;
-        return 'M ' + ox + ',' + (oy - h * .50) +
-            ' C ' + (ox + hw * .12) + ',' + (oy - h * .40) + ' ' + (ox + hw) + ',' + (oy - h * .12) + ' ' + (ox + hw * .93) + ',' + (oy + h * .12) +
-            ' C ' + (ox + hw * .78) + ',' + (oy + h * .38) + ' ' + (ox + hw * .36) + ',' + (oy + h * .50) + ' ' + ox + ',' + (oy + h * .50) +
-            ' C ' + (ox - hw * .36) + ',' + (oy + h * .50) + ' ' + (ox - hw * .78) + ',' + (oy + h * .38) + ' ' + (ox - hw * .93) + ',' + (oy + h * .12) +
-            ' C ' + (ox - hw) + ',' + (oy - h * .12) + ' ' + (ox - hw * .12) + ',' + (oy - h * .40) + ' ' + ox + ',' + (oy - h * .50) + ' Z';
+
+    // ═══════════════════════════════════════════════
+    //  LEAF SHAPES (3 Distinct Botanical Shapes)
+    // ═══════════════════════════════════════════════
+    function leafD(ox, oy, w, h, style) {
+        var s = style || 'laurel';
+        var hw = w / 2, hh = h / 2;
+
+        if (s === 'laurel' || s === 'botanical') {
+            // Classical Botanical Laurel (Symmetric pointed elliptic, tapered tips)
+            return 'M ' + ox + ',' + (oy - hh) +
+                ' C ' + (ox + hw * 0.72) + ',' + (oy - hh * 0.65) + ' ' + (ox + hw * 0.98) + ',' + (oy - hh * 0.10) + ' ' + (ox + hw * 0.95) + ',' + (oy + hh * 0.30) +
+                ' C ' + (ox + hw * 0.90) + ',' + (oy + hh * 0.68) + ' ' + (ox + hw * 0.45) + ',' + (oy + hh * 0.92) + ' ' + ox + ',' + (oy + hh) +
+                ' C ' + (ox - hw * 0.45) + ',' + (oy + hh * 0.92) + ' ' + (ox - hw * 0.90) + ',' + (oy + hh * 0.68) + ' ' + (ox - hw * 0.95) + ',' + (oy + hh * 0.30) +
+                ' C ' + (ox - hw * 0.98) + ',' + (oy - hh * 0.10) + ' ' + (ox - hw * 0.72) + ',' + (oy - hh * 0.65) + ' ' + ox + ',' + (oy - hh) + ' Z';
+        }
+
+        if (s === 'oval' || s === 'medallion' || s === 'rounded') {
+            // Imperial Rounded Oval Medallion (Smooth continuous ellipse, zero points)
+            return 'M ' + ox + ',' + (oy - hh) +
+                ' C ' + (ox + hw * 0.55) + ',' + (oy - hh) + ' ' + (ox + hw) + ',' + (oy - hh * 0.55) + ' ' + (ox + hw) + ',' + oy +
+                ' C ' + (ox + hw) + ',' + (oy + hh * 0.55) + ' ' + (ox + hw * 0.55) + ',' + (oy + hh) + ' ' + ox + ',' + (oy + hh) +
+                ' C ' + (ox - hw * 0.55) + ',' + (oy + hh) + ' ' + (ox - hw) + ',' + (oy + hh * 0.55) + ' ' + (ox - hw) + ',' + oy +
+                ' C ' + (ox - hw) + ',' + (oy - hh * 0.55) + ' ' + (ox - hw * 0.55) + ',' + (oy - hh) + ' ' + ox + ',' + (oy - hh) + ' Z';
+        }
+
+        if (s === 'oak' || s === 'lobed') {
+            // Royal Oak Foliage (Rounded botanical lobes, single apical crown lobe)
+            return 'M ' + ox + ',' + (oy - hh) +
+                ' C ' + (ox + hw * 0.42) + ',' + (oy - hh * 0.92) + ' ' + (ox + hw * 0.78) + ',' + (oy - hh * 0.78) + ' ' + (ox + hw * 0.70) + ',' + (oy - hh * 0.58) +
+                ' C ' + (ox + hw * 0.55) + ',' + (oy - hh * 0.48) + ' ' + (ox + hw * 0.95) + ',' + (oy - hh * 0.32) + ' ' + (ox + hw * 0.92) + ',' + (oy - hh * 0.10) +
+                ' C ' + (ox + hw * 0.65) + ',' + (oy + hh * 0.08) + ' ' + (ox + hw * 0.88) + ',' + (oy + hh * 0.32) + ' ' + (ox + hw * 0.78) + ',' + (oy + hh * 0.58) +
+                ' C ' + (ox + hw * 0.50) + ',' + (oy + hh * 0.75) + ' ' + (ox + hw * 0.35) + ',' + (oy + hh * 0.92) + ' ' + ox + ',' + (oy + hh) +
+                ' C ' + (ox - hw * 0.35) + ',' + (oy + hh * 0.92) + ' ' + (ox - hw * 0.50) + ',' + (oy + hh * 0.75) + ' ' + (ox - hw * 0.78) + ',' + (oy + hh * 0.58) +
+                ' C ' + (ox - hw * 0.88) + ',' + (oy + hh * 0.32) + ' ' + (ox - hw * 0.65) + ',' + (oy + hh * 0.08) + ' ' + (ox - hw * 0.92) + ',' + (oy - hh * 0.10) +
+                ' C ' + (ox - hw * 0.95) + ',' + (oy - hh * 0.32) + ' ' + (ox - hw * 0.55) + ',' + (oy - hh * 0.48) + ' ' + (ox - hw * 0.70) + ',' + (oy - hh * 0.58) +
+                ' C ' + (ox - hw * 0.78) + ',' + (oy - hh * 0.78) + ' ' + (ox - hw * 0.42) + ',' + (oy - hh * 0.92) + ' ' + ox + ',' + (oy - hh) + ' Z';
+        }
+
+        // Fallback laurel
+        return 'M ' + ox + ',' + (oy - hh) +
+            ' C ' + (ox + hw * 0.72) + ',' + (oy - hh * 0.65) + ' ' + (ox + hw * 0.98) + ',' + (oy - hh * 0.10) + ' ' + (ox + hw * 0.95) + ',' + (oy + hh * 0.30) +
+            ' C ' + (ox + hw * 0.90) + ',' + (oy + hh * 0.68) + ' ' + (ox + hw * 0.45) + ',' + (oy + hh * 0.92) + ' ' + ox + ',' + (oy + hh) +
+            ' C ' + (ox - hw * 0.45) + ',' + (oy + hh * 0.92) + ' ' + (ox - hw * 0.90) + ',' + (oy + hh * 0.68) + ' ' + (ox - hw * 0.95) + ',' + (oy + hh * 0.30) +
+            ' C ' + (ox - hw * 0.98) + ',' + (oy - hh * 0.10) + ' ' + (ox - hw * 0.72) + ',' + (oy - hh * 0.65) + ' ' + ox + ',' + (oy - hh) + ' Z';
     }
 
     // ═══════════════════════════════════════════════
@@ -112,6 +163,17 @@
         this._leafColor = opts.leafColor || '#17361a';
         this._branchColor = opts.branchColor || '#3a1f13';
         this._trunkColor = opts.trunkColor || '#2d1607';
+
+        // Style Variations
+        this._branchStyle = opts.branchStyle || 'woodcut'; // 'woodcut' | 'gnarled' | 'classic'
+        this._trunkStyle = opts.trunkStyle || 'calligraphic'; // 'calligraphic' | 'gnarled_veteran'
+        this._leafStyle = opts.leafStyle || 'laurel'; // 'laurel' | 'oval' | 'oak'
+        this._leafRenderMode = opts.leafRenderMode || 'svg'; // 'svg' | 'png'
+        this._leafPngUrls = Object.assign({
+            laurel: 'assets/leaf_laurel.png',
+            oval: 'assets/leaf_oval.png',
+            oak: 'assets/leaf_oak.png'
+        }, opts.leafPngUrls || {});
 
         this._LC = [];
         this._BC = [];
@@ -162,7 +224,7 @@
     }
 
     // ═══════════════════════════════════════════════
-    //  DOM — just the stage + SVG, nothing else
+    //  DOM — stage + SVG viewport
     // ═══════════════════════════════════════════════
     FamilyTreeSVG.prototype._buildDOM = function () {
         var c = this._container;
@@ -200,7 +262,7 @@
     };
 
     // ═══════════════════════════════════════════════
-    //  EVENTS — pan, zoom, touch only
+    //  EVENTS — pan & zoom
     // ═══════════════════════════════════════════════
     FamilyTreeSVG.prototype._bindEvents = function () {
         var self = this;
@@ -352,7 +414,6 @@
         var totalSW = 0; kids.forEach(function (k) { totalSW += k._sw; });
         var totalSpread = this._SPREAD[depth2];
 
-        // Make canopy round and fan-shaped when branches are fewer
         var minSp = [0, 140, 100, 82, 65, 52];
         if (kids.length > 0) {
             totalSpread = Math.max(totalSpread, minSp[depth2] || 52);
@@ -363,12 +424,10 @@
 
         totalSpread = Math.min(240, totalSpread * Math.max(1, Math.pow(totalSW, 0.28) * 0.72));
 
-        // Force main canopy to be wide dome but keep branches above trunk top
         if (depth === 0) {
             totalSpread = Math.min(200, totalSpread);
         }
 
-        // Naturally pull children branches upwards by scaling the parent's angle
         var centerAngle = depth === 0 ? angle : angle * 0.62;
         var startAngle = centerAngle - totalSpread / 2;
         var offset = 0;
@@ -391,7 +450,6 @@
             var kex = endX + Math.cos(rad) * lenVar;
             var key = endY + Math.sin(rad) * lenVar;
 
-            // Clamp Y to prevent initial branch layout from dipping below the top of the trunk
             var limitY = (ROOT && ROOT._y !== undefined ? ROOT._y : endY) + 20;
             if (key > limitY) key = limitY;
 
@@ -401,13 +459,12 @@
 
     FamilyTreeSVG.prototype._resolveOverlaps = function () {
         var nodes = Object.values(this._nodeMap);
-        var iterations = 80; // More iterations for better spacing with wider layout
+        var iterations = 80;
 
-        // Calculate dynamic canopy size — wide dome ellipse (rx wider, ry shorter)
         var N = nodes.length;
         var R = Math.max(520, Math.min(1200, Math.sqrt(N) * 135));
-        var rx = R * 1.6;  // wider horizontally for dome shape
-        var ry = R * 0.85; // taller vertically to cover more area
+        var rx = R * 1.6;
+        var ry = R * 0.85;
         var canopyCenterX = this._ROOT._x;
         var canopyCenterY = this._ROOT._y - ry * 0.52;
         var LW = this._LW, ROOT = this._ROOT;
@@ -429,7 +486,6 @@
                     var r1 = LW * sc1 * 0.65;
                     var r2 = LW * sc2 * 0.65;
 
-                    // Sibling padding — extra spacing for cleaner separation
                     var isSibling = (n1._sx === n2._sx && n1._sy === n2._sy);
                     var padding = isSibling ? 65 : 35;
                     var minDist = r1 + r2 + padding;
@@ -455,7 +511,6 @@
                 }
             }
 
-            // Apply wide-dome elliptical constraint for a balanced rounded canopy
             nodes.forEach(function (n) {
                 if (n.id !== ROOT.id) {
                     var dx = n._x - canopyCenterX;
@@ -470,7 +525,6 @@
                 }
             });
 
-            // Clamp Y coordinates to stay above trunk top
             nodes.forEach(function (n) {
                 if (n.id !== ROOT.id) {
                     var limitY = ROOT._y + 20;
@@ -505,96 +559,253 @@
         mkSVG('ellipse', { cx: rx, cy: groundY + 14, rx: groundRx, ry: 65, fill: '#d6a661', opacity: '0.4' }, this._els.gBg);
     };
 
+    // ═══════════════════════════════════════════════
+    //  TRUNK DRAWING (3 Styles: earth_roots, gnarly, swirling_olive)
+    // ═══════════════════════════════════════════════
     FamilyTreeSVG.prototype._drawTrunk = function (rx, groundY, topY) {
         var gTrunk = this._els.gTrunk;
         gTrunk.innerHTML = '';
         var mc = this._countMembers(this._ROOT);
         var ts = Math.max(0.45, Math.min(1.0, mc / 60));
-        var bw = Math.round(40 + 50 * ts), tw = Math.round(16 + 18 * ts);
+        var bw = Math.round(42 + 48 * ts); // 42-90 base width
+        var tw = Math.round(16 + 18 * ts); // 16-34 top width
         var h = groundY - topY;
-        var ptsL = [], ptsR = [], steps = 40;
-        var leanX = (rng('trunk', 'lean') - 0.5) * 60;
+        var style = this._trunkStyle || 'calligraphic';
+        if (style === 'earth_roots') style = 'calligraphic';
+        if (style === 'gnarly') style = 'gnarled_veteran';
+        if (style !== 'gnarled_veteran') style = 'calligraphic';
+
         var tc = this._trunkColor;
+        var outlineCol = getContrastYIQ(tc) === '#3a1f13' ? 'rgba(0,0,0,0.15)' : 'rgba(214,166,97,0.5)';
+        var darkBorder = darker(tc, 0.22);
+        var steps = 40;
 
-        for (var i = 0; i <= steps; i++) {
-            var t = i / steps;
-            var co = Math.sin(t * Math.PI) * leanX * 0.4 + Math.sin(t * 2 * Math.PI) * 15;
-            var cw = tw + (bw - tw) * Math.pow(1 - t, 2.2);
-            var sw = Math.sin(t * 8 * Math.PI) * 1.5;
-            ptsL.push({ x: rx - cw + co + sw, y: groundY - t * h });
-            ptsR.push({ x: rx + cw + co + sw, y: groundY - t * h });
+        if (style === 'calligraphic') {
+            // ═══════════════════════════════════════════════
+            // 1. ELEGANT S-CURVE (Original Classic Trunk)
+            // ═══════════════════════════════════════════════
+            var leanX = 18;
+            var ptsL = [], ptsR = [];
+
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var curveOffset = Math.sin(t * Math.PI) * leanX * 0.4 + Math.sin(t * 2 * Math.PI) * 15;
+                var currW = tw + (bw - tw) * Math.pow(1 - t, 2.2);
+                var smoothWiggle = Math.sin(t * 8 * Math.PI) * 1.5;
+
+                ptsL.push({ x: rx - currW + curveOffset + smoothWiggle, y: groundY - t * h });
+                ptsR.push({ x: rx + currW + curveOffset + smoothWiggle, y: groundY - t * h });
+            }
+
+            var dL = 'M' + ptsL[0].x.toFixed(1) + ',' + ptsL[0].y.toFixed(1);
+            ptsL.forEach(function (p, idx) { if (idx > 0) dL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dR = ' L' + ptsR[ptsR.length - 1].x.toFixed(1) + ',' + ptsR[ptsR.length - 1].y.toFixed(1);
+            for (var idx = ptsR.length - 2; idx >= 0; idx--) dR += ' L' + ptsR[idx].x.toFixed(1) + ',' + ptsR[idx].y.toFixed(1);
+            var d = dL + dR + ' Z';
+
+            // Base dark bark fill adapting dynamically to trunkColor
+            mkSVG('path', { d: d, fill: tc, stroke: 'none' }, gTrunk);
+
+            // Mid-tone core fill
+            var midPtsL = [], midPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = tw + (bw - tw) * Math.pow(1 - t, 2.2);
+                var curveOffset = Math.sin(t * Math.PI) * leanX * 0.4 + Math.sin(t * 2 * Math.PI) * 15;
+                var smoothWiggle = Math.sin(t * 8 * Math.PI) * 1.5;
+
+                midPtsL.push({ x: rx - currW * 0.72 + curveOffset + smoothWiggle, y: groundY - t * h });
+                midPtsR.push({ x: rx + currW * 0.78 + curveOffset + smoothWiggle, y: groundY - t * h });
+            }
+            var dMidL = 'M' + midPtsL[0].x.toFixed(1) + ',' + midPtsL[0].y.toFixed(1);
+            midPtsL.forEach(function (p, idx) { if (idx > 0) dMidL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dMidR = ' L' + midPtsR[midPtsR.length - 1].x.toFixed(1) + ',' + midPtsR[midPtsR.length - 1].y.toFixed(1);
+            for (var idx = midPtsR.length - 2; idx >= 0; idx--) dMidR += ' L' + midPtsR[idx].x.toFixed(1) + ',' + midPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dMidL + dMidR + ' Z', fill: lighter(tc, 0.12), stroke: 'none' }, gTrunk);
+
+            // Highlight/texture layer
+            var hiPtsL = [], hiPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = tw + (bw - tw) * Math.pow(1 - t, 2.2);
+                var curveOffset = Math.sin(t * Math.PI) * leanX * 0.4 + Math.sin(t * 2 * Math.PI) * 15;
+                var smoothWiggle = Math.sin(t * 8 * Math.PI) * 1.5;
+
+                hiPtsL.push({ x: rx - currW * 0.25 + curveOffset + smoothWiggle, y: groundY - t * h });
+                hiPtsR.push({ x: rx + currW * 0.45 + curveOffset + smoothWiggle, y: groundY - t * h });
+            }
+            var dHiL = 'M' + hiPtsL[0].x.toFixed(1) + ',' + hiPtsL[0].y.toFixed(1);
+            hiPtsL.forEach(function (p, idx) { if (idx > 0) dHiL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dHiR = ' L' + hiPtsR[hiPtsR.length - 1].x.toFixed(1) + ',' + hiPtsR[hiPtsR.length - 1].y.toFixed(1);
+            for (var idx = hiPtsR.length - 2; idx >= 0; idx--) dHiR += ' L' + hiPtsR[idx].x.toFixed(1) + ',' + hiPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dHiL + dHiR + ' Z', fill: lighter(tc, 0.28), stroke: 'none', opacity: '0.65' }, gTrunk);
+
+            // Subtle natural wood knots
+            var knot1Y = groundY - h * 0.38;
+            var knot1X = rx + (Math.sin(0.38 * Math.PI) * leanX * 0.4 + Math.sin(0.38 * 2 * Math.PI) * 15) + 3;
+            mkSVG('ellipse', { cx: knot1X, cy: knot1Y, rx: 5.5, ry: 4, fill: darker(tc, 0.35), opacity: '0.8' }, gTrunk);
+            mkSVG('ellipse', { cx: knot1X + 0.5, cy: knot1Y - 0.5, rx: 3, ry: 2, fill: darker(tc, 0.55) }, gTrunk);
+
+            var knot2Y = groundY - h * 0.68;
+            var knot2X = rx + (Math.sin(0.68 * Math.PI) * leanX * 0.4 + Math.sin(0.68 * 2 * Math.PI) * 15) - 2;
+            mkSVG('ellipse', { cx: knot2X, cy: knot2Y, rx: 4.5, ry: 3.5, fill: darker(tc, 0.35), opacity: '0.75' }, gTrunk);
+
+            // Main gold highlight outline or dark shade based on trunk contrast
+            mkSVG('path', { d: dR.replace(' L', 'M'), fill: 'none', stroke: outlineCol, 'stroke-width': '4.5', 'stroke-linecap': 'round' }, gTrunk);
+            // Crisp outer contour outline
+            mkSVG('path', { d: d, fill: 'none', stroke: darkBorder, 'stroke-width': '3.5' }, gTrunk);
+
+        } else if (style === 'gnarled_veteran') {
+            // ═══════════════════════════════════════════════
+            // 2. GNARLED KNOTTED VETERAN (Dramatic Lean + Carved Burl Eye)
+            // ═══════════════════════════════════════════════
+            var gBW = bw * 1.18;
+            var gTW = tw * 1.05;
+            var ptsL = [], ptsR = [];
+            var knotT = 0.52;
+            var knotY = groundY - knotT * h;
+            var knotX = rx;
+
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = gTW + (gBW - gTW) * Math.pow(1 - t, 1.6);
+                var sweep = (Math.sin(t * Math.PI) * 38 - Math.sin(t * 2.0 * Math.PI) * 18) * (1 - Math.pow(t, 2.8));
+                if (Math.abs(t - knotT) < 0.05) knotX = rx + sweep + currW * 0.15;
+
+                var knobL = Math.sin(t * 10.0 + 1.2) * 3.5;
+                var knobR = Math.cos(t * 8.5 + 0.6) * 4.0;
+                if (t < 0.38) {
+                    knobL += gBW * 0.75 * Math.pow((0.38 - t) / 0.38, 1.4);
+                }
+
+                ptsL.push({ x: rx - currW + sweep - knobL, y: groundY - t * h });
+                ptsR.push({ x: rx + currW + sweep + knobR, y: groundY - t * h });
+            }
+
+            var dL = 'M' + ptsL[0].x.toFixed(1) + ',' + ptsL[0].y.toFixed(1);
+            ptsL.forEach(function (p, idx) { if (idx > 0) dL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dR = ' L' + ptsR[ptsR.length - 1].x.toFixed(1) + ',' + ptsR[ptsR.length - 1].y.toFixed(1);
+            for (var idx = ptsR.length - 2; idx >= 0; idx--) dR += ' L' + ptsR[idx].x.toFixed(1) + ',' + ptsR[idx].y.toFixed(1);
+
+            var pL0 = ptsL[0], pR0 = ptsR[0];
+            var span = pR0.x - pL0.x;
+            var dRoots = ' Q ' + (pR0.x - span * 0.22).toFixed(1) + ' ' + (groundY - 24) + ', ' + (pL0.x + span * 0.48).toFixed(1) + ' ' + (groundY - 10) +
+                        ' Q ' + (pL0.x + span * 0.28).toFixed(1) + ' ' + (groundY - 30) + ', ' + pL0.x.toFixed(1) + ' ' + groundY + ' Z';
+            var d = dL + dR + dRoots;
+
+            mkSVG('path', { d: d, fill: tc, stroke: 'none' }, gTrunk);
+
+            // Mid-tone core
+            var midPtsL = [], midPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = gTW + (gBW - gTW) * Math.pow(1 - t, 1.6);
+                var sweep = (Math.sin(t * Math.PI) * 38 - Math.sin(t * 2.0 * Math.PI) * 18) * (1 - Math.pow(t, 2.8));
+                midPtsL.push({ x: rx - currW * 0.68 + sweep, y: groundY - t * h });
+                midPtsR.push({ x: rx + currW * 0.76 + sweep, y: groundY - t * h });
+            }
+            var dMidL = 'M' + midPtsL[0].x.toFixed(1) + ',' + midPtsL[0].y.toFixed(1);
+            midPtsL.forEach(function (p, idx) { if (idx > 0) dMidL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dMidR = ' L' + midPtsR[midPtsR.length - 1].x.toFixed(1) + ',' + midPtsR[midPtsR.length - 1].y.toFixed(1);
+            for (var idx = midPtsR.length - 2; idx >= 0; idx--) dMidR += ' L' + midPtsR[idx].x.toFixed(1) + ',' + midPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dMidL + dMidR + ' Z', fill: lighter(tc, 0.12), stroke: 'none' }, gTrunk);
+
+            // Highlight layer
+            var hiPtsL = [], hiPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = gTW + (gBW - gTW) * Math.pow(1 - t, 1.6);
+                var sweep = (Math.sin(t * Math.PI) * 38 - Math.sin(t * 2.0 * Math.PI) * 18) * (1 - Math.pow(t, 2.8));
+                hiPtsL.push({ x: rx - currW * 0.22 + sweep, y: groundY - t * h });
+                hiPtsR.push({ x: rx + currW * 0.44 + sweep, y: groundY - t * h });
+            }
+            var dHiL = 'M' + hiPtsL[0].x.toFixed(1) + ',' + hiPtsL[0].y.toFixed(1);
+            hiPtsL.forEach(function (p, idx) { if (idx > 0) dHiL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dHiR = ' L' + hiPtsR[hiPtsR.length - 1].x.toFixed(1) + ',' + hiPtsR[hiPtsR.length - 1].y.toFixed(1);
+            for (var idx = hiPtsR.length - 2; idx >= 0; idx--) dHiR += ' L' + hiPtsR[idx].x.toFixed(1) + ',' + hiPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dHiL + dHiR + ' Z', fill: lighter(tc, 0.28), stroke: 'none', opacity: '0.65' }, gTrunk);
+
+            // Carved knot burl
+            mkSVG('ellipse', { cx: knotX, cy: knotY, rx: 11, ry: 8, fill: darker(tc, 0.45), stroke: darkBorder, 'stroke-width': '1.8' }, gTrunk);
+            mkSVG('ellipse', { cx: knotX + 1, cy: knotY - 0.8, rx: 6, ry: 4, fill: darker(tc, 0.65), stroke: lighter(tc, 0.22), 'stroke-width': '1', opacity: '0.85' }, gTrunk);
+
+            mkSVG('path', { d: dR.replace(' L', 'M'), fill: 'none', stroke: outlineCol, 'stroke-width': '4.5', 'stroke-linecap': 'round' }, gTrunk);
+            mkSVG('path', { d: d, fill: 'none', stroke: darkBorder, 'stroke-width': '3.5' }, gTrunk);
         }
-        var dL = 'M' + ptsL[0].x + ',' + ptsL[0].y; ptsL.forEach(function (p, i) { if (i > 0) dL += ' L' + p.x + ',' + p.y; });
-        var dR = ' L' + ptsR[ptsR.length - 1].x + ',' + ptsR[ptsR.length - 1].y;
-        for (var i = ptsR.length - 2; i >= 0; i--) dR += ' L' + ptsR[i].x + ',' + ptsR[i].y;
-        var d = dL + dR + ' Z';
-        mkSVG('path', { d: d, fill: tc, stroke: 'none' }, gTrunk);
-
-        // Mid-tone
-        var midL = [], midR = [];
-        for (var i = 0; i <= steps; i++) {
-            var t = i / steps;
-            var cw = tw + (bw - tw) * Math.pow(1 - t, 2.2);
-            var co = Math.sin(t * Math.PI) * leanX * 0.4 + Math.sin(t * 2 * Math.PI) * 15;
-            var sw = Math.sin(t * 8 * Math.PI) * 1.5;
-            midL.push({ x: rx - cw * 0.72 + co + sw, y: groundY - t * h });
-            midR.push({ x: rx + cw * 0.78 + co + sw, y: groundY - t * h });
-        }
-        var dML = 'M' + midL[0].x + ',' + midL[0].y; midL.forEach(function (p, i) { if (i > 0) dML += ' L' + p.x + ',' + p.y; });
-        var dMR = ' L' + midR[midR.length - 1].x + ',' + midR[midR.length - 1].y;
-        for (var i = midR.length - 2; i >= 0; i--) dMR += ' L' + midR[i].x + ',' + midR[i].y;
-        mkSVG('path', { d: dML + dMR + ' Z', fill: lighter(tc, 0.12), stroke: 'none' }, gTrunk);
-
-        // Highlight
-        var hiL = [], hiR = [];
-        for (var i = 0; i <= steps; i++) {
-            var t = i / steps;
-            var cw = tw + (bw - tw) * Math.pow(1 - t, 2.2);
-            var co = Math.sin(t * Math.PI) * leanX * 0.4 + Math.sin(t * 2 * Math.PI) * 15;
-            var sw = Math.sin(t * 8 * Math.PI) * 1.5;
-            hiL.push({ x: rx - cw * 0.25 + co + sw, y: groundY - t * h });
-            hiR.push({ x: rx + cw * 0.45 + co + sw, y: groundY - t * h });
-        }
-        var dHL = 'M' + hiL[0].x + ',' + hiL[0].y; hiL.forEach(function (p, i) { if (i > 0) dHL += ' L' + p.x + ',' + p.y; });
-        var dHR = ' L' + hiR[hiR.length - 1].x + ',' + hiR[hiR.length - 1].y;
-        for (var i = hiR.length - 2; i >= 0; i--) dHR += ' L' + hiR[i].x + ',' + hiR[i].y;
-        mkSVG('path', { d: dHL + dHR + ' Z', fill: lighter(tc, 0.28), stroke: 'none', opacity: '0.65' }, gTrunk);
-
-        var outCol = getContrastYIQ(tc) === '#3a1f13' ? 'rgba(0,0,0,0.15)' : 'rgba(214,166,97,0.5)';
-        mkSVG('path', { d: dR, fill: 'none', stroke: outCol, 'stroke-width': '4.5', 'stroke-linecap': 'round' }, gTrunk);
-        mkSVG('path', { d: d, fill: 'none', stroke: darker(tc, 0.2), 'stroke-width': '3.5' }, gTrunk);
     };
 
+    // ═══════════════════════════════════════════════
+    //  BRANCH SEGMENT DRAWING (4 Distinct Styles)
+    // ═══════════════════════════════════════════════
     FamilyTreeSVG.prototype._drawSeg = function (x1, y1, x2, y2, depth, nid, isP) {
         var g = Math.min(depth, this._BC.length - 1);
-        var bw = Math.max(2, this._BW[g]);
+        var bw = Math.max(3, this._BW[g]);
         var dx = x2 - x1, dy = y2 - y1;
         var len = Math.sqrt(dx * dx + dy * dy) || 1;
         var px = -dy / len, py = dx / len;
-        var sf = isP ? 0.05 : (0.16 + rng(nid, 'sw') * 0.12);
-        var sweep = len * sf;
-        var bs = dx < 0 ? 1 : -1;
-        var side = bs * (0.45 + rng(nid, 'sd') * 0.55);
+        var style = this._branchStyle || 'woodcut';
+        var ROOT = this._ROOT;
+        var gBr = this._els.gBr;
+
+        var sweepFactor = isP ? 0.04 : (0.15 + rng(nid, 'sw') * 0.10);
+        var sweep = len * sweepFactor;
+        var biasSide = dx < 0 ? 1 : -1;
+        var side = biasSide * (0.45 + rng(nid, 'sd') * 0.55);
+
+        // 1. CLASSIC / SMOOTH CALLIGRAPHIC
+        if (style === 'classic') {
+            var dClassic = 'M ' + x1 + ',' + y1 + ' Q ' + (x1 + dx * 0.5 + px * sweep * side) + ',' + (y1 + dy * 0.5 + py * sweep * side) + ' ' + x2 + ',' + y2;
+            mkSVG('path', {
+                d: dClassic, fill: 'none',
+                stroke: isP ? 'rgba(214,166,97,0.5)' : this._BC[g],
+                'stroke-width': isP ? bw * 0.6 : bw,
+                'stroke-linecap': 'round'
+            }, gBr);
+            return;
+        }
+
+        // 2. GNARLED RUSTIC (Knotty Angular Deflection)
+        // 3. WOODCUT ORGANIC (Default layered bough with gold sap lines)
         var steps = 8;
         var d = 'M' + x1 + ',' + y1;
-        var ROOT = this._ROOT;
+        var gnarledMultiplier = (style === 'gnarled') ? 1.6 : 1.0;
+
         for (var i = 1; i <= steps; i++) {
             var t = i / steps;
-            var lx = x1 + dx * t, ly = y1 + dy * t;
-            var bow = Math.sin(t * Math.PI) * sweep * side;
-            var wig = i < steps ? (rng(nid, 'wg_' + i) - 0.5) * (len * 0.06) : 0;
-            var disp = bow + wig;
-            var cx = lx + px * disp, cy = ly + py * disp;
-            var maxAllowedY = ROOT._y + 30;
-            if (cy > maxAllowedY) cy = maxAllowedY;
-            d += ' L' + cx + ',' + cy;
+            var lx = x1 + dx * t;
+            var ly = y1 + dy * t;
+            var bow = Math.sin(t * Math.PI) * sweep * side * gnarledMultiplier;
+            var wiggle = (rng(nid, 'wg_' + i) - 0.5) * (len * (style === 'gnarled' ? 0.09 : 0.05));
+            var disp = bow + wiggle;
+            var cx = lx + px * disp;
+            var cy = ly + py * disp;
+            if (cy > ROOT._y + 30) cy = ROOT._y + 30;
+            d += ' L' + cx.toFixed(1) + ',' + cy.toFixed(1);
         }
-        mkSVG('path', {
-            d: d, fill: 'none',
-            stroke: isP ? 'rgba(214,166,97,0.5)' : this._BC[g],
-            'stroke-width': isP ? bw * 0.6 : bw,
-            'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-        }, this._els.gBr);
+
+        // Primary Scaffold Boughs (depth === 0)
+        if (depth === 0) {
+            var boughW = Math.round(bw * 1.15);
+            var trunkBark = this._trunkColor;
+            mkSVG('path', { d: d, fill: 'none', stroke: darker(trunkBark, 0.3), 'stroke-width': boughW + 3.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, gBr);
+            mkSVG('path', { d: d, fill: 'none', stroke: trunkBark, 'stroke-width': boughW, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, gBr);
+            mkSVG('path', { d: d, fill: 'none', stroke: lighter(trunkBark, 0.18), 'stroke-width': boughW * 0.48, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.85' }, gBr);
+            mkSVG('path', { d: d, fill: 'none', stroke: '#d6a661', 'stroke-width': '1.6', class: 'woodcut-sap-line', opacity: '0.85', 'stroke-linecap': 'round' }, gBr);
+            mkSVG('circle', { cx: x1, cy: y1, r: boughW * 0.52, fill: trunkBark }, gBr);
+            return;
+        }
+
+        // Secondary & Lateral Limbs (depth > 0)
+        var baseCol = isP ? 'rgba(214,166,97,0.5)' : this._BC[g];
+        var sw = isP ? bw * 0.6 : bw;
+        mkSVG('path', { d: d, fill: 'none', stroke: darker(baseCol, 0.25), 'stroke-width': sw + 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, gBr);
+        mkSVG('path', { d: d, fill: 'none', stroke: baseCol, 'stroke-width': sw, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, gBr);
+        if (!isP && sw >= 8) {
+            mkSVG('path', { d: d, fill: 'none', stroke: lighter(baseCol, 0.16), 'stroke-width': sw * 0.42, 'stroke-linecap': 'round', opacity: '0.75' }, gBr);
+        }
+        if (!isP && (depth === 1 || depth === 2)) {
+            mkSVG('path', { d: d, fill: 'none', stroke: '#d6a661', 'stroke-width': '1.1', class: 'woodcut-sap-line', opacity: '0.6' }, gBr);
+        }
     };
 
     FamilyTreeSVG.prototype._drawAllBranches = function (node) {
@@ -612,6 +823,9 @@
         return w.length === 1 ? [n.substr(0, 9) + '…'] : [w.slice(0, Math.ceil(w.length / 2)).join(' '), w.slice(Math.ceil(w.length / 2)).join(' ')];
     };
 
+    // ═══════════════════════════════════════════════
+    //  LEAF DRAWING (SVG Path & PNG Modes)
+    // ═══════════════════════════════════════════════
     FamilyTreeSVG.prototype._drawLeaf = function (node) {
         var self = this;
         var gi = Math.min(node._gen, this._LC.length - 1), col = this._LC[gi];
@@ -626,14 +840,54 @@
         var g = mkSVG('g', { 'data-id': node.id, cursor: 'pointer' }, this._els.gLv);
         var gid = 'lg_' + node.id;
         var defs = this._els.svg.querySelector('defs');
-        if (!defs.querySelector('#' + gid)) {
-            var lg = mkSVG('linearGradient', { id: gid, x1: '25%', y1: '0%', x2: '78%', y2: '100%' }, defs);
-            mkSVG('stop', { offset: '0%', 'stop-color': lighter(col.f, 0.2) }, lg);
-            mkSVG('stop', { offset: '50%', 'stop-color': col.f }, lg);
-            mkSVG('stop', { offset: '100%', 'stop-color': darker(col.f, 0.1) }, lg);
+
+        // PNG IMAGE RENDER MODE
+        if (this._leafRenderMode === 'png') {
+            var pngUrl = (this._leafPngUrls && this._leafPngUrls[this._leafStyle]) || ('assets/leaf_' + this._leafStyle + '.png');
+            mkSVG('image', {
+                href: pngUrl,
+                x: -w * 0.56,
+                y: -h * 0.56,
+                width: w * 1.12,
+                height: h * 1.12,
+                preserveAspectRatio: 'xMidYMid meet',
+                transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')',
+                filter: 'url(#fts-ds-' + this._uid + ')'
+            }, g);
+        } else {
+            // PURE VECTOR SVG MODE
+            if (!defs.querySelector('#' + gid)) {
+                var lg = mkSVG('linearGradient', { id: gid, x1: '25%', y1: '0%', x2: '78%', y2: '100%' }, defs);
+                mkSVG('stop', { offset: '0%', 'stop-color': lighter(col.f, 0.2) }, lg);
+                mkSVG('stop', { offset: '50%', 'stop-color': col.f }, lg);
+                mkSVG('stop', { offset: '100%', 'stop-color': darker(col.f, 0.1) }, lg);
+            }
+            mkSVG('path', { d: leafD(0, 0, w, h, this._leafStyle), fill: 'rgba(0,0,0,0.25)', filter: 'url(#fts-ds-' + this._uid + ')', transform: 'translate(' + (cx + 3) + ',' + (cy + 5) + ') rotate(' + ang + ')' }, g);
+            mkSVG('path', { d: leafD(0, 0, w, h, this._leafStyle), fill: 'url(#' + gid + ')', stroke: col.s, 'stroke-width': node._isPartner ? '1.5' : '2.5', transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')' }, g);
+
+            // Botanical Gold Veins / Inner Rim Details
+            var goldCol = col.s || '#d6a661';
+            if (this._leafStyle === 'laurel') {
+                var vg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none', opacity: '0.65' }, g);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.44) + ' L 0,' + (h * 0.44), fill: 'none', stroke: goldCol, 'stroke-width': '1.3', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.18) + ' Q ' + (w * 0.20) + ',' + (-h * 0.26) + ' ' + (w * 0.36) + ',' + (-h * 0.22), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.18) + ' Q ' + (-w * 0.20) + ',' + (-h * 0.26) + ' ' + (-w * 0.36) + ',' + (-h * 0.22), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.16) + ' Q ' + (w * 0.20) + ',' + (h * 0.08) + ' ' + (w * 0.36) + ',' + (h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.16) + ' Q ' + (-w * 0.20) + ',' + (h * 0.08) + ' ' + (-w * 0.36) + ',' + (h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+            } else if (this._leafStyle === 'oval') {
+                var vg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none', opacity: '0.6' }, g);
+                mkSVG('ellipse', { cx: 0, cy: 0, rx: w * 0.38, ry: h * 0.40, fill: 'none', stroke: goldCol, 'stroke-width': '1.1', 'stroke-dasharray': '4 3' }, vg);
+            } else if (this._leafStyle === 'oak') {
+                var vg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none', opacity: '0.65' }, g);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.44) + ' L 0,' + (h * 0.44), fill: 'none', stroke: goldCol, 'stroke-width': '1.3', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.22) + ' Q ' + (w * 0.22) + ',' + (-h * 0.28) + ' ' + (w * 0.34) + ',' + (-h * 0.20), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.22) + ' Q ' + (-w * 0.22) + ',' + (-h * 0.28) + ' ' + (-w * 0.34) + ',' + (-h * 0.20), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.10) + ' Q ' + (w * 0.22) + ',' + (h * 0.04) + ' ' + (w * 0.36) + ',' + (h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.10) + ' Q ' + (-w * 0.22) + ',' + (h * 0.04) + ' ' + (-w * 0.36) + ',' + (h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+            }
         }
-        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'rgba(0,0,0,0.25)', filter: 'url(#fts-ds-' + this._uid + ')', transform: 'translate(' + (cx + 3) + ',' + (cy + 5) + ') rotate(' + ang + ')' }, g);
-        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'url(#' + gid + ')', stroke: col.s, 'stroke-width': node._isPartner ? '1.5' : '2.5', transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')' }, g);
+
+        // Family Member Name Text
         var lines = this._splitName(node.name || node.full_name || 'No Name');
         var fs = (node._gen === 0 ? 13 : 11) * sc, lineH = fs + 2.5;
         var tg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none' }, g);
@@ -646,6 +900,8 @@
             }, tg);
             txt.textContent = ln;
         });
+
+        // Interactive Collapse / Expand Button
         var kids = node.children || [];
         if (kids.length) {
             var rad = (ang - 90) * Math.PI / 180;
@@ -671,8 +927,8 @@
             mkSVG('stop', { offset: '50%', 'stop-color': col.f }, lg);
             mkSVG('stop', { offset: '100%', 'stop-color': darker(col.f, 0.1) }, lg);
         }
-        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'rgba(0,0,0,0.15)', filter: 'url(#fts-ds-' + this._uid + ')', transform: 'translate(' + (cx + 2) + ',' + (cy + 3) + ') rotate(' + ang + ')' }, g);
-        mkSVG('path', { d: leafD(0, 0, w, h), fill: 'url(#' + gid + ')', stroke: col.s, 'stroke-width': '1.3', transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')' }, g);
+        mkSVG('path', { d: leafD(0, 0, w, h, this._leafStyle), fill: 'rgba(0,0,0,0.15)', filter: 'url(#fts-ds-' + this._uid + ')', transform: 'translate(' + (cx + 2) + ',' + (cy + 3) + ') rotate(' + ang + ')' }, g);
+        mkSVG('path', { d: leafD(0, 0, w, h, this._leafStyle), fill: 'url(#' + gid + ')', stroke: col.s, 'stroke-width': '1.3', transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')' }, g);
     };
 
     FamilyTreeSVG.prototype._drawDecorations = function () {
@@ -702,7 +958,7 @@
             var ang = rng('trunk_dec_a', i) * 360;
             var col = ['#7d5c48', '#a37f6a', '#5c3d2e'][Math.floor(rng('trunk_dec_c', i) * 3)];
             var gl = mkSVG('g', { transform: 'translate(' + x + ',' + y + ') rotate(' + ang + ')' }, gDeco);
-            mkSVG('path', { d: leafD(0, 0, size, size * 1.3), fill: col, opacity: '0.4' }, gl);
+            mkSVG('path', { d: leafD(0, 0, size, size * 1.3, self._leafStyle), fill: col, opacity: '0.4' }, gl);
         }
 
         // Twigs + sub-branches
@@ -852,6 +1108,37 @@
         if (leafColor) this._leafColor = leafColor;
         if (branchColor) this._branchColor = branchColor;
         if (trunkColor) this._trunkColor = trunkColor;
+        this.render();
+    };
+
+    FamilyTreeSVG.prototype.setBranchStyle = function (style) {
+        if (style) this._branchStyle = style;
+        this.render();
+    };
+
+    FamilyTreeSVG.prototype.setTrunkStyle = function (style) {
+        if (style) this._trunkStyle = style;
+        this.render();
+    };
+
+    FamilyTreeSVG.prototype.setLeafStyle = function (style) {
+        if (style) this._leafStyle = style;
+        this.render();
+    };
+
+    FamilyTreeSVG.prototype.setLeafRenderMode = function (mode, urls) {
+        if (mode) this._leafRenderMode = mode;
+        if (urls) Object.assign(this._leafPngUrls, urls);
+        this.render();
+    };
+
+    FamilyTreeSVG.prototype.setStyles = function (styles) {
+        if (!styles) return;
+        if (styles.branchStyle) this._branchStyle = styles.branchStyle;
+        if (styles.trunkStyle) this._trunkStyle = styles.trunkStyle;
+        if (styles.leafStyle) this._leafStyle = styles.leafStyle;
+        if (styles.leafRenderMode) this._leafRenderMode = styles.leafRenderMode;
+        if (styles.leafPngUrls) Object.assign(this._leafPngUrls, styles.leafPngUrls);
         this.render();
     };
 
