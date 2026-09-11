@@ -115,9 +115,9 @@ import FamilyTreeSVG from 'family-tree-svg';
 
     // Initialize with custom styling
     const tree = FamilyTreeSVG.create('#tree-container', familyData, {
-      branchStyle: 'woodcut',      // 'woodcut' | 'gnarled' | 'classic'
-      trunkStyle: 'calligraphic',  // 'calligraphic' | 'gnarled_veteran'
-      leafStyle: 'laurel',         // 'laurel' | 'oval' | 'oak'
+      branchStyle: 'woodcut',      // 'woodcut' | 'gnarled' | 'classic' | 'willow_tendril' | 'zen_bonsai'
+      trunkStyle: 'calligraphic',  // 'calligraphic' | 'gnarled_veteran' | 'banyan_cathedral' | 'dragon_bonsai'
+      leafStyle: 'laurel',         // 'laurel' | 'oval' | 'oak' | 'ginkgo' | 'maple'
       leafRenderMode: 'svg',       // 'svg' | 'png'
       leafColor: '#17361a',
       branchColor: '#3a1f13',
@@ -130,35 +130,81 @@ import FamilyTreeSVG from 'family-tree-svg';
 
 ---
 
-## Style Catalog
+## 🎨 Visual Style Catalog
 
-### 🌿 Branch Styles (`branchStyle`)
+> 📖 **Looking for high-resolution visual previews?** See the full [Visual Style & Botanical Guide](VISUAL_SHOWCASE.md).
 
-| Style | Key | Description |
-|---|---|---|
-| **Woodcut Sap (Default)** | `'woodcut'` | Layered bark contours, warm heartwood inner core, living gold sap lines (`.woodcut-sap-line`), and smooth collar joints |
-| **Gnarled Rustic** | `'gnarled'` | Organic winding branches with knot deflections, high sweep amplitude, and rustic bark ridges |
-| **Classic Smooth** | `'classic'` | Minimalist, smooth calligraphic curved boughs |
+### 🍃 Standalone Leaf Shapes (Pure Vector SVG — Zero Background)
+
+All leaf shapes are available as **pure vector SVGs with zero background** (transparent background, zero cards or containers) featuring metallic gold venation and double accent borders:
+
+<p align="center">
+  <img src="assets/leaf_maple.svg" width="125" alt="Japanese Maple" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/leaf_birch.svg" width="110" alt="Serrated Birch" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/leaf_linden.svg" width="115" alt="Cordate Linden" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/leaf_ginkgo.svg" width="115" alt="Majestic Ginkgo" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/leaf_oak.svg" width="110" alt="Royal Oak" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/leaf_laurel.svg" width="110" alt="Classical Laurel" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/leaf_oval.svg" width="110" alt="Imperial Oval" />
+</p>
+
+| SVG | Shape | Key | Botanical Anatomy & Venation |
+|:---:|---|---|---|
+| <img src="assets/leaf_maple.svg" width="80" /> | **🍁 Japanese Maple** | `'maple'` / `'japanese_maple'` | 7 radiating needle-sharp slender lobes, deep curved sinuses, and 7-ray palmate gold venation |
+| <img src="assets/leaf_birch.svg" width="70" /> | **🍃 Serrated Birch / Elm** | `'birch'` / `'serrated_birch'` | Natural saw-tooth serrated perimeter, acute apex, and alternating herringbone pinnate veins |
+| <img src="assets/leaf_linden.svg" width="75" /> | **💚 Cordate Linden** | `'linden'` / `'cordate_linden'` | Iconic heart-cleft notched base firmly seated on branch collars with acute drip-tip |
+| <img src="assets/leaf_ginkgo.svg" width="75" /> | **🪭 Majestic Ginkgo** | `'ginkgo'` | Flared fan contour with sharp apex point staying on upper side (pointing upwards!) |
+| <img src="assets/leaf_oak.svg" width="70" /> | **🌳 Royal Oak** | `'oak'` | Classical lobed crown foliage with undulating rounded lobes and apical crown lobe |
+| <img src="assets/leaf_laurel.svg" width="70" /> | **🍃 Classical Laurel** | `'laurel'` | Pointed symmetric botanical elliptic leaf with tapered tips and gold midrib vein |
+| <img src="assets/leaf_oval.svg" width="70" /> | **🟢 Imperial Oval** | `'oval'` | Continuous rounded heraldic badge / medallion with spacious text area and gold rim |
+
+---
+
+### 🌲 Whole-Tree Branch Architectures (50-Person Family — Zero Background)
+
+Each branch style is demonstrated with a **full ~50-person family tree structure** (based on `khan_tree (4).svg`), forming a proper, balanced canopy across all boughs and tiers (rendered without background):
+
+#### 🪵 Woodcut Sap Organic (`branchStyle: 'woodcut'`)
+Layered bark contours, warm heartwood inner core, and living gold sap lines (`.woodcut-sap-line`) with smooth collar joints. Paired with 🍃 **Serrated Birch** leaves:
+![Woodcut Sap Branches (50-Person Tree — Zero Background)](assets/tree_woodcut_sap.png)
+*Vector SVG*: [`assets/tree_woodcut_sap.svg`](assets/tree_woodcut_sap.svg)
+
+#### 🌲 Gnarled Rustic (`branchStyle: 'gnarled'`)
+Organic winding boughs with high sweep amplitude, rugged bark ridges, and natural knot deflections. Paired with 🌳 **Royal Oak** leaves:
+![Gnarled Rustic Branches (50-Person Tree — Zero Background)](assets/tree_gnarled_rustic.png)
+*Vector SVG*: [`assets/tree_gnarled_rustic.svg`](assets/tree_gnarled_rustic.svg)
+
+#### 🌿 Flowing Willow Tendril (`branchStyle: 'willow_tendril'`)
+Gracefully weeping S-curve boughs, soft drooping droop offsets, and braided double bark contour lines. Paired with 💚 **Cordate Linden** leaves:
+![Flowing Willow Tendril Branches (50-Person Tree — Zero Background)](assets/tree_willow_tendril.png)
+*Vector SVG*: [`assets/tree_willow_tendril.svg`](assets/tree_willow_tendril.svg)
+
+#### 🎋 Faceted Zen Bonsai (`branchStyle: 'zen_bonsai'`)
+Sculpted angular mitered facet boughs, chamfered corner nodes, and geometric Zen aesthetic. Paired with 🍁 **Japanese Maple** leaves:
+![Faceted Zen Bonsai Branches (50-Person Tree — Zero Background)](assets/tree_zen_bonsai.png)
+*Vector SVG*: [`assets/tree_zen_bonsai.svg`](assets/tree_zen_bonsai.svg)
+
+---
 
 ### 🌳 Trunk Styles (`trunkStyle`)
 
 | Style | Key | Description |
 |---|---|---|
-| **Elegant S-Curve (Default / Original)** | `'calligraphic'` | The iconic calligraphic S-curve trunk with 3D layered shading (dark base, mid-tone heartwood, highlight streak), subtle wood knots, and right-flank gold light reflection |
-| **Gnarled Knotted Veteran** | `'gnarled_veteran'` | Rugged winding trunk with weathered S-curve lean, asymmetric windward anchor root foot, carved wood knot burl ("tree eye"), and matching 3D layered shading |
-
-### 🍃 Leaf Shapes (`leafStyle`)
-
-| Shape | Key | Description |
-|---|---|---|
-| **Classical Laurel (Default)** | `'laurel'` | Pointed symmetric botanical elliptic leaf with tapered tips and gold midrib vein (0% heart shape) |
-| **Imperial Oval Medallion** | `'oval'` | Continuous rounded heraldic badge / medallion with spacious text area and double gold rim |
-| **Royal Oak Foliage** | `'oak'` | Distinctive lobed foliage with undulating rounded lobes and apical crown lobe |
+| **Elegant S-Curve (Default)** | `'calligraphic'` | Iconic calligraphic S-curve trunk with 3D layered shading, subtle wood knots, and right-flank gold light reflection |
+| **Gnarled Knotted Veteran** | `'gnarled_veteran'` | Rugged winding trunk with weathered S-curve lean, asymmetric anchor root foot, and carved wood knot burl |
+| **Cathedral Banyan** | `'banyan_cathedral'` | Multi-columnar fluted pillars, massive buttress roots, cathedral root arches, and open hollow heartwood window |
+| **Dragon Coiled Bonsai** | `'dragon_bonsai'` | Muscular low curve, horizontal dragon-back sweep, muscular bark plates, anchor root claws, and weathered burls |
 
 ### 🖼️ Leaf Render Modes (`leafRenderMode`)
 
 - `'svg'` *(default)*: Renders dynamic SVG paths with gradients, drop shadows, and delicate gold vein lines.
-- `'png'`: Uses pre-rendered high-resolution transparent PNG leaf assets (`assets/leaf_laurel.png`, `assets/leaf_oval.png`, `assets/leaf_oak.png`) with crisp text overlays.
+- `'png'`: Uses pre-rendered high-resolution transparent PNG leaf assets (`assets/leaf_maple.png`, `assets/leaf_birch.png`, `assets/leaf_linden.png`, `assets/leaf_ginkgo.png`, `assets/leaf_laurel.png`, `assets/leaf_oval.png`, `assets/leaf_oak.png`) with crisp text overlays.
 
 ---
 
@@ -172,9 +218,9 @@ Creates and returns a new `FamilyTreeSVG` instance.
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `branchStyle` | `string` | `'woodcut'` | Branch style: `'woodcut'`, `'gnarled'`, or `'classic'` |
-| `trunkStyle` | `string` | `'calligraphic'` | Trunk style: `'calligraphic'` or `'gnarled_veteran'` |
-| `leafStyle` | `string` | `'laurel'` | Leaf shape: `'laurel'`, `'oval'`, or `'oak'` |
+| `branchStyle` | `string` | `'woodcut'` | Branch style: `'woodcut'`, `'gnarled'`, `'classic'`, `'willow_tendril'`, `'zen_bonsai'` |
+| `trunkStyle` | `string` | `'calligraphic'` | Trunk style: `'calligraphic'`, `'gnarled_veteran'`, `'banyan_cathedral'`, `'dragon_bonsai'` |
+| `leafStyle` | `string` | `'laurel'` | Leaf shape: `'laurel'`, `'oval'`, `'oak'`, `'ginkgo'`, `'maple'`, `'birch'`, `'linden'` |
 | `leafRenderMode` | `string` | `'svg'` | Leaf mode: `'svg'` (vector paths) or `'png'` (image assets) |
 | `leafPngUrls` | `Object` | *built-in* | Map of leaf styles to custom PNG URLs |
 | `leafColor` | `string` | `'#17361a'` | Hex color for leaves |
@@ -186,13 +232,13 @@ Creates and returns a new `FamilyTreeSVG` instance.
 ### Instance Methods
 
 #### `tree.setBranchStyle(style)`
-Switches the branch rendering style (`'woodcut'`, `'gnarled'`, `'classic'`).
+Switches the branch rendering style (`'woodcut'`, `'gnarled'`, `'classic'`, `'willow_tendril'`, `'zen_bonsai'`).
 
 #### `tree.setTrunkStyle(style)`
-Switches the trunk style (`'earth_roots'`, `'gnarly'`, `'swirling_olive'`).
+Switches the trunk style (`'calligraphic'`, `'gnarled_veteran'`, `'banyan_cathedral'`, `'dragon_bonsai'`).
 
 #### `tree.setLeafStyle(style)`
-Switches the leaf shape (`'laurel'`, `'oval'`, `'oak'`).
+Switches the leaf shape (`'laurel'`, `'oval'`, `'oak'`, `'ginkgo'`, `'maple'`).
 
 #### `tree.setLeafRenderMode(mode, urls)`
 Switches between `'svg'` vector and `'png'` image rendering.

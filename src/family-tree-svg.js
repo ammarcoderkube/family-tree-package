@@ -6,9 +6,9 @@
  *     leafColor: '#17361a',
  *     branchColor: '#3a1f13',
  *     trunkColor: '#2d1607',
- *     branchStyle: 'woodcut',   // 'woodcut' | 'gnarled' | 'classic'
- *     trunkStyle: 'calligraphic', // 'calligraphic' | 'gnarled_veteran'
- *     leafStyle: 'laurel',      // 'laurel' | 'oval' | 'oak'
+ *     branchStyle: 'woodcut',   // 'woodcut' | 'gnarled' | 'classic' | 'willow_tendril' | 'zen_bonsai'
+ *     trunkStyle: 'calligraphic', // 'calligraphic' | 'gnarled_veteran' | 'banyan_cathedral' | 'dragon_bonsai'
+ *     leafStyle: 'laurel',      // 'laurel' | 'oval' | 'oak' | 'ginkgo' | 'maple'
  *     leafRenderMode: 'svg'     // 'svg' | 'png'
  *   });
  */
@@ -142,6 +142,76 @@
                 ' C ' + (ox - hw * 0.78) + ',' + (oy - hh * 0.78) + ' ' + (ox - hw * 0.42) + ',' + (oy - hh * 0.92) + ' ' + ox + ',' + (oy - hh) + ' Z';
         }
 
+        if (s === 'ginkgo' || s === 'fan') {
+            // Majestic Ginkgo Leaf with Point Staying Upside (Pointed apex at top, broad fan collar at bottom)
+            return 'M ' + ox + ',' + (oy - hh * 0.95) +
+                ' C ' + (ox - hw * 0.20) + ',' + (oy - hh * 0.60) + ' ' + (ox - hw * 0.70) + ',' + (oy - hh * 0.25) + ' ' + (ox - hw * 0.95) + ',' + (oy + hh * 0.15) +
+                ' C ' + (ox - hw * 1.05) + ',' + (oy + hh * 0.55) + ' ' + (ox - hw * 0.65) + ',' + (oy + hh * 0.90) + ' ' + (ox - hw * 0.12) + ',' + (oy + hh * 0.92) +
+                ' C ' + (ox - hw * 0.05) + ',' + (oy + hh * 0.82) + ' ' + (ox + hw * 0.05) + ',' + (oy + hh * 0.82) + ' ' + (ox + hw * 0.12) + ',' + (oy + hh * 0.92) +
+                ' C ' + (ox + hw * 0.65) + ',' + (oy + hh * 0.90) + ' ' + (ox + hw * 1.05) + ',' + (oy + hh * 0.55) + ' ' + (ox + hw * 0.95) + ',' + (oy + hh * 0.15) +
+                ' C ' + (ox + hw * 0.70) + ',' + (oy - hh * 0.25) + ' ' + (ox + hw * 0.20) + ',' + (oy - hh * 0.60) + ' ' + ox + ',' + (oy - hh * 0.95) + ' Z';
+        }
+
+        if (s === 'maple' || s === 'japanese_maple' || s === 'palmate') {
+            // Authentic 7-Lobed Japanese Maple Leaf (Acer palmatum)
+            return 'M ' + ox + ',' + (oy + hh * 0.48) +
+                ' C ' + (ox - hw * 0.12) + ',' + (oy + hh * 0.46) + ' ' + (ox - hw * 0.22) + ',' + (oy + hh * 0.48) + ' ' + (ox - hw * 0.35) + ',' + (oy + hh * 0.55) +
+                ' Q ' + (ox - hw * 0.55) + ',' + (oy + hh * 0.62) + ' ' + (ox - hw * 0.75) + ',' + (oy + hh * 0.60) +
+                ' L ' + (ox - hw * 0.64) + ',' + (oy + hh * 0.44) +
+                ' Q ' + (ox - hw * 0.50) + ',' + (oy + hh * 0.38) + ' ' + (ox - hw * 0.36) + ',' + (oy + hh * 0.32) +
+                ' L ' + (ox - hw * 0.55) + ',' + (oy + hh * 0.26) + ' L ' + (ox - hw * 0.74) + ',' + (oy + hh * 0.18) +
+                ' Q ' + (ox - hw * 0.92) + ',' + (oy + hh * 0.08) + ' ' + (ox - hw * 0.98) + ',' + (oy - hh * 0.06) +
+                ' L ' + (ox - hw * 0.84) + ',' + (oy - hh * 0.12) + ' L ' + (ox - hw * 0.66) + ',' + (oy - hh * 0.10) +
+                ' Q ' + (ox - hw * 0.48) + ',' + (oy - hh * 0.14) + ' ' + (ox - hw * 0.38) + ',' + (oy - hh * 0.22) +
+                ' L ' + (ox - hw * 0.54) + ',' + (oy - hh * 0.36) + ' L ' + (ox - hw * 0.66) + ',' + (oy - hh * 0.52) +
+                ' Q ' + (ox - hw * 0.62) + ',' + (oy - hh * 0.68) + ' ' + (ox - hw * 0.64) + ',' + (oy - hh * 0.78) +
+                ' L ' + (ox - hw * 0.48) + ',' + (oy - hh * 0.62) + ' L ' + (ox - hw * 0.40) + ',' + (oy - hh * 0.52) +
+                ' Q ' + (ox - hw * 0.28) + ',' + (oy - hh * 0.40) + ' ' + (ox - hw * 0.18) + ',' + (oy - hh * 0.38) +
+                ' L ' + (ox - hw * 0.26) + ',' + (oy - hh * 0.64) + ' L ' + (ox - hw * 0.16) + ',' + (oy - hh * 0.80) +
+                ' Q ' + (ox - hw * 0.08) + ',' + (oy - hh * 0.90) + ' ' + ox + ',' + (oy - hh) +
+                ' Q ' + (ox + hw * 0.08) + ',' + (oy - hh * 0.90) + ' ' + (ox + hw * 0.16) + ',' + (oy - hh * 0.80) + ' L ' + (ox + hw * 0.26) + ',' + (oy - hh * 0.64) +
+                ' Q ' + (ox + hw * 0.18) + ',' + (oy - hh * 0.38) + ' ' + (ox + hw * 0.28) + ',' + (oy - hh * 0.40) + ' L ' + (ox + hw * 0.40) + ',' + (oy - hh * 0.52) + ' L ' + (ox + hw * 0.48) + ',' + (oy - hh * 0.62) +
+                ' Q ' + (ox + hw * 0.64) + ',' + (oy - hh * 0.78) + ' ' + (ox + hw * 0.62) + ',' + (oy - hh * 0.68) + ' L ' + (ox + hw * 0.66) + ',' + (oy - hh * 0.52) + ' L ' + (ox + hw * 0.54) + ',' + (oy - hh * 0.36) +
+                ' Q ' + (ox + hw * 0.38) + ',' + (oy - hh * 0.22) + ' ' + (ox + hw * 0.48) + ',' + (oy - hh * 0.14) + ' L ' + (ox + hw * 0.66) + ',' + (oy - hh * 0.10) + ' L ' + (ox + hw * 0.84) + ',' + (oy - hh * 0.12) +
+                ' Q ' + (ox + hw * 0.98) + ',' + (oy - hh * 0.06) + ' ' + (ox + hw * 0.92) + ',' + (oy + hh * 0.08) + ' L ' + (ox + hw * 0.74) + ',' + (oy + hh * 0.18) + ' L ' + (ox + hw * 0.55) + ',' + (oy + hh * 0.26) +
+                ' Q ' + (ox + hw * 0.36) + ',' + (oy + hh * 0.32) + ' ' + (ox + hw * 0.50) + ',' + (oy + hh * 0.38) + ' L ' + (ox + hw * 0.64) + ',' + (oy + hh * 0.44) +
+                ' Q ' + (ox + hw * 0.75) + ',' + (oy + hh * 0.60) + ' ' + (ox + hw * 0.55) + ',' + (oy + hh * 0.62) +
+                ' C ' + (ox + hw * 0.35) + ',' + (oy + hh * 0.55) + ' ' + (ox + hw * 0.22) + ',' + (oy + hh * 0.48) + ' ' + (ox + hw * 0.12) + ',' + (oy + hh * 0.46) +
+                ' C ' + (ox + hw * 0.06) + ',' + (oy + hh * 0.46) + ' ' + (ox + hw * 0.02) + ',' + (oy + hh * 0.47) + ' ' + ox + ',' + (oy + hh * 0.48) + ' Z';
+        }
+
+        if (s === 'birch' || s === 'serrated_birch' || s === 'elm') {
+            // Serrated Elm / Birch Foliage (Betula serrata - Sawtooth Ovate)
+            return 'M ' + ox + ',' + (oy + hh * 0.76) +
+                ' C ' + (ox - hw * 0.08) + ',' + (oy + hh * 0.73) + ' ' + (ox - hw * 0.18) + ',' + (oy + hh * 0.68) + ' ' + (ox - hw * 0.28) + ',' + (oy + hh * 0.60) +
+                ' L ' + (ox - hw * 0.34) + ',' + (oy + hh * 0.56) + ' L ' + (ox - hw * 0.31) + ',' + (oy + hh * 0.51) + ' L ' + (ox - hw * 0.43) + ',' + (oy + hh * 0.45) + ' L ' + (ox - hw * 0.38) + ',' + (oy + hh * 0.41) +
+                ' L ' + (ox - hw * 0.51) + ',' + (oy + hh * 0.33) + ' L ' + (ox - hw * 0.45) + ',' + (oy + hh * 0.29) + ' L ' + (ox - hw * 0.57) + ',' + (oy + hh * 0.19) + ' L ' + (ox - hw * 0.51) + ',' + (oy + hh * 0.15) +
+                ' L ' + (ox - hw * 0.61) + ',' + (oy + hh * 0.04) + ' L ' + (ox - hw * 0.55) + ',' + oy + ' L ' + (ox - hw * 0.62) + ',' + (oy - hh * 0.13) + ' L ' + (ox - hw * 0.55) + ',' + (oy - hh * 0.16) +
+                ' L ' + (ox - hw * 0.58) + ',' + (oy - hh * 0.28) + ' L ' + (ox - hw * 0.51) + ',' + (oy - hh * 0.30) + ' L ' + (ox - hw * 0.51) + ',' + (oy - hh * 0.42) + ' L ' + (ox - hw * 0.44) + ',' + (oy - hh * 0.44) +
+                ' L ' + (ox - hw * 0.41) + ',' + (oy - hh * 0.54) + ' L ' + (ox - hw * 0.33) + ',' + (oy - hh * 0.55) + ' L ' + (ox - hw * 0.29) + ',' + (oy - hh * 0.64) + ' L ' + (ox - hw * 0.21) + ',' + (oy - hh * 0.64) +
+                ' L ' + (ox - hw * 0.15) + ',' + (oy - hh * 0.73) + ' L ' + (ox - hw * 0.07) + ',' + (oy - hh * 0.73) + ' L ' + ox + ',' + (oy - hh * 0.85) +
+                ' L ' + (ox + hw * 0.07) + ',' + (oy - hh * 0.73) + ' L ' + (ox + hw * 0.15) + ',' + (oy - hh * 0.73) + ' L ' + (ox + hw * 0.21) + ',' + (oy - hh * 0.64) + ' L ' + (ox + hw * 0.29) + ',' + (oy - hh * 0.64) +
+                ' L ' + (ox + hw * 0.33) + ',' + (oy - hh * 0.55) + ' L ' + (ox + hw * 0.41) + ',' + (oy - hh * 0.54) + ' L ' + (ox + hw * 0.44) + ',' + (oy - hh * 0.44) + ' L ' + (ox + hw * 0.51) + ',' + (oy - hh * 0.42) +
+                ' L ' + (ox + hw * 0.51) + ',' + (oy - hh * 0.30) + ' L ' + (ox + hw * 0.58) + ',' + (oy - hh * 0.28) + ' L ' + (ox + hw * 0.55) + ',' + (oy - hh * 0.16) + ' L ' + (ox + hw * 0.62) + ',' + (oy - hh * 0.13) +
+                ' L ' + (ox + hw * 0.55) + ',' + oy + ' L ' + (ox + hw * 0.61) + ',' + (oy + hh * 0.04) + ' L ' + (ox + hw * 0.51) + ',' + (oy + hh * 0.15) + ' L ' + (ox + hw * 0.57) + ',' + (oy + hh * 0.19) +
+                ' L ' + (ox + hw * 0.45) + ',' + (oy + hh * 0.29) + ' L ' + (ox + hw * 0.51) + ',' + (oy + hh * 0.33) + ' L ' + (ox + hw * 0.38) + ',' + (oy + hh * 0.41) + ' L ' + (ox + hw * 0.43) + ',' + (oy + hh * 0.45) +
+                ' L ' + (ox + hw * 0.31) + ',' + (oy + hh * 0.51) + ' L ' + (ox + hw * 0.34) + ',' + (oy + hh * 0.56) + ' L ' + (ox + hw * 0.28) + ',' + (oy + hh * 0.60) +
+                ' C ' + (ox + hw * 0.18) + ',' + (oy + hh * 0.68) + ' ' + (ox + hw * 0.08) + ',' + (oy + hh * 0.73) + ' ' + ox + ',' + (oy + hh * 0.76) + ' Z';
+        }
+
+        if (s === 'linden' || s === 'cordate' || s === 'cordate_linden') {
+            // Cordate Linden / Catalpa (Tilia cordata - Deep Heart-cleft Base & Acute Tip)
+            return 'M ' + ox + ',' + (oy + hh * 0.55) +
+                ' C ' + (ox - hw * 0.10) + ',' + (oy + hh * 0.65) + ' ' + (ox - hw * 0.25) + ',' + (oy + hh * 0.76) + ' ' + (ox - hw * 0.44) + ',' + (oy + hh * 0.72) +
+                ' C ' + (ox - hw * 0.62) + ',' + (oy + hh * 0.68) + ' ' + (ox - hw * 0.76) + ',' + (oy + hh * 0.50) + ' ' + (ox - hw * 0.78) + ',' + (oy + hh * 0.30) +
+                ' C ' + (ox - hw * 0.80) + ',' + (oy + hh * 0.05) + ' ' + (ox - hw * 0.65) + ',' + (oy - hh * 0.25) + ' ' + (ox - hw * 0.45) + ',' + (oy - hh * 0.50) +
+                ' C ' + (ox - hw * 0.30) + ',' + (oy - hh * 0.68) + ' ' + (ox - hw * 0.15) + ',' + (oy - hh * 0.78) + ' ' + ox + ',' + (oy - hh * 0.86) +
+                ' C ' + (ox + hw * 0.15) + ',' + (oy - hh * 0.78) + ' ' + (ox + hw * 0.30) + ',' + (oy - hh * 0.68) + ' ' + (ox + hw * 0.45) + ',' + (oy - hh * 0.50) +
+                ' C ' + (ox + hw * 0.65) + ',' + (oy - hh * 0.25) + ' ' + (ox + hw * 0.80) + ',' + (oy + hh * 0.05) + ' ' + (ox + hw * 0.78) + ',' + (oy + hh * 0.30) +
+                ' C ' + (ox + hw * 0.76) + ',' + (oy + hh * 0.50) + ' ' + (ox + hw * 0.62) + ',' + (oy + hh * 0.68) + ' ' + (ox + hw * 0.44) + ',' + (oy + hh * 0.72) +
+                ' C ' + (ox + hw * 0.25) + ',' + (oy + hh * 0.76) + ' ' + (ox + hw * 0.10) + ',' + (oy + hh * 0.65) + ' ' + ox + ',' + (oy + hh * 0.55) + ' Z';
+        }
+
         // Fallback laurel
         return 'M ' + ox + ',' + (oy - hh) +
             ' C ' + (ox + hw * 0.72) + ',' + (oy - hh * 0.65) + ' ' + (ox + hw * 0.98) + ',' + (oy - hh * 0.10) + ' ' + (ox + hw * 0.95) + ',' + (oy + hh * 0.30) +
@@ -165,14 +235,21 @@
         this._trunkColor = opts.trunkColor || '#2d1607';
 
         // Style Variations
-        this._branchStyle = opts.branchStyle || 'woodcut'; // 'woodcut' | 'gnarled' | 'classic'
-        this._trunkStyle = opts.trunkStyle || 'calligraphic'; // 'calligraphic' | 'gnarled_veteran'
-        this._leafStyle = opts.leafStyle || 'laurel'; // 'laurel' | 'oval' | 'oak'
+        this._branchStyle = opts.branchStyle || 'woodcut'; // 'woodcut' | 'gnarled' | 'classic' | 'willow_tendril' | 'zen_bonsai'
+        this._trunkStyle = opts.trunkStyle || 'calligraphic'; // 'calligraphic' | 'gnarled_veteran' | 'banyan_cathedral' | 'dragon_bonsai'
+        this._leafStyle = opts.leafStyle || 'laurel'; // 'laurel' | 'oval' | 'oak' | 'ginkgo' | 'maple' | 'birch' | 'linden'
         this._leafRenderMode = opts.leafRenderMode || 'svg'; // 'svg' | 'png'
         this._leafPngUrls = Object.assign({
             laurel: 'assets/leaf_laurel.png',
             oval: 'assets/leaf_oval.png',
-            oak: 'assets/leaf_oak.png'
+            oak: 'assets/leaf_oak.png',
+            ginkgo: 'assets/leaf_ginkgo.png',
+            maple: 'assets/leaf_maple.png',
+            japanese_maple: 'assets/leaf_maple.png',
+            birch: 'assets/leaf_birch.png',
+            serrated_birch: 'assets/leaf_birch.png',
+            linden: 'assets/leaf_linden.png',
+            cordate_linden: 'assets/leaf_linden.png'
         }, opts.leafPngUrls || {});
 
         this._LC = [];
@@ -573,7 +650,7 @@
         var style = this._trunkStyle || 'calligraphic';
         if (style === 'earth_roots') style = 'calligraphic';
         if (style === 'gnarly') style = 'gnarled_veteran';
-        if (style !== 'gnarled_veteran') style = 'calligraphic';
+        if (['calligraphic', 'gnarled_veteran', 'banyan_cathedral', 'dragon_bonsai'].indexOf(style) === -1) style = 'calligraphic';
 
         var tc = this._trunkColor;
         var outlineCol = getContrastYIQ(tc) === '#3a1f13' ? 'rgba(0,0,0,0.15)' : 'rgba(214,166,97,0.5)';
@@ -731,11 +808,162 @@
 
             mkSVG('path', { d: dR.replace(' L', 'M'), fill: 'none', stroke: outlineCol, 'stroke-width': '4.5', 'stroke-linecap': 'round' }, gTrunk);
             mkSVG('path', { d: d, fill: 'none', stroke: darkBorder, 'stroke-width': '3.5' }, gTrunk);
+
+        } else if (style === 'banyan_cathedral') {
+            // ═══════════════════════════════════════════════
+            // 3. CATHEDRAL BANYAN (Multi-Columnar Pillars & Arched Hollow)
+            // ═══════════════════════════════════════════════
+            var bBW = bw * 1.35;
+            var bTW = tw * 1.25;
+            var ptsL = [], ptsR = [];
+
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = bTW + (bBW - bTW) * Math.pow(1 - t, 1.9);
+                if (t < 0.45) currW += bBW * 0.55 * Math.pow((0.45 - t) / 0.45, 1.5);
+                var sweep = Math.sin(t * Math.PI) * 12 * (1 - t);
+                var fluteL = Math.sin(t * 8.0) * 2.5;
+                var fluteR = Math.cos(t * 8.0) * 2.5;
+
+                ptsL.push({ x: rx - currW + sweep + fluteL, y: groundY - t * h });
+                ptsR.push({ x: rx + currW + sweep + fluteR, y: groundY - t * h });
+            }
+
+            var dL = 'M' + ptsL[0].x.toFixed(1) + ',' + ptsL[0].y.toFixed(1);
+            ptsL.forEach(function (p, idx) { if (idx > 0) dL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dR = ' L' + ptsR[ptsR.length - 1].x.toFixed(1) + ',' + ptsR[ptsR.length - 1].y.toFixed(1);
+            for (var idx = ptsR.length - 2; idx >= 0; idx--) dR += ' L' + ptsR[idx].x.toFixed(1) + ',' + ptsR[idx].y.toFixed(1);
+
+            // 3 Arched Cathedral Root Portals
+            var pL0 = ptsL[0], pR0 = ptsR[0];
+            var span = pR0.x - pL0.x;
+            var a1 = pR0.x - span * 0.28;
+            var a2 = pR0.x - span * 0.72;
+            var dRoots = ' Q ' + (pR0.x - span * 0.12).toFixed(1) + ' ' + (groundY - 26) + ', ' + a1.toFixed(1) + ' ' + groundY +
+                        ' Q ' + (rx).toFixed(1) + ' ' + (groundY - 42) + ', ' + a2.toFixed(1) + ' ' + groundY +
+                        ' Q ' + (pL0.x + span * 0.12).toFixed(1) + ' ' + (groundY - 26) + ', ' + pL0.x.toFixed(1) + ' ' + groundY + ' Z';
+            var d = dL + dR + dRoots;
+
+            mkSVG('path', { d: d, fill: tc, stroke: 'none' }, gTrunk);
+
+            // Mid-tone vertical fluting columns
+            var midPtsL = [], midPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = bTW + (bBW - bTW) * Math.pow(1 - t, 1.9);
+                if (t < 0.45) currW += bBW * 0.40 * Math.pow((0.45 - t) / 0.45, 1.5);
+                var sweep = Math.sin(t * Math.PI) * 12 * (1 - t);
+                midPtsL.push({ x: rx - currW * 0.68 + sweep, y: groundY - t * h });
+                midPtsR.push({ x: rx + currW * 0.75 + sweep, y: groundY - t * h });
+            }
+            var dMidL = 'M' + midPtsL[0].x.toFixed(1) + ',' + midPtsL[0].y.toFixed(1);
+            midPtsL.forEach(function (p, idx) { if (idx > 0) dMidL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dMidR = ' L' + midPtsR[midPtsR.length - 1].x.toFixed(1) + ',' + midPtsR[midPtsR.length - 1].y.toFixed(1);
+            for (var idx = midPtsR.length - 2; idx >= 0; idx--) dMidR += ' L' + midPtsR[idx].x.toFixed(1) + ',' + midPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dMidL + dMidR + ' Z', fill: lighter(tc, 0.12), stroke: 'none' }, gTrunk);
+
+            // Highlight crest ribbons
+            var hiPtsL = [], hiPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = bTW + (bBW - bTW) * Math.pow(1 - t, 1.9);
+                var sweep = Math.sin(t * Math.PI) * 12 * (1 - t);
+                hiPtsL.push({ x: rx - currW * 0.20 + sweep, y: groundY - t * h });
+                hiPtsR.push({ x: rx + currW * 0.42 + sweep, y: groundY - t * h });
+            }
+            var dHiL = 'M' + hiPtsL[0].x.toFixed(1) + ',' + hiPtsL[0].y.toFixed(1);
+            hiPtsL.forEach(function (p, idx) { if (idx > 0) dHiL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dHiR = ' L' + hiPtsR[hiPtsR.length - 1].x.toFixed(1) + ',' + hiPtsR[hiPtsR.length - 1].y.toFixed(1);
+            for (var idx = hiPtsR.length - 2; idx >= 0; idx--) dHiR += ' L' + hiPtsR[idx].x.toFixed(1) + ',' + hiPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dHiL + dHiR + ' Z', fill: lighter(tc, 0.28), stroke: 'none', opacity: '0.65' }, gTrunk);
+
+            // Cathedral Natural Hollow Window
+            var hollowY = groundY - h * 0.35;
+            mkSVG('ellipse', { cx: rx + 3, cy: hollowY, rx: 8, ry: 15, fill: darker(tc, 0.55), stroke: darkBorder, 'stroke-width': '2' }, gTrunk);
+            mkSVG('ellipse', { cx: rx + 4, cy: hollowY + 2, rx: 4, ry: 9, fill: darker(tc, 0.75), stroke: lighter(tc, 0.15), 'stroke-width': '1', opacity: '0.9' }, gTrunk);
+
+            mkSVG('path', { d: dR.replace(' L', 'M'), fill: 'none', stroke: outlineCol, 'stroke-width': '4.5', 'stroke-linecap': 'round' }, gTrunk);
+            mkSVG('path', { d: d, fill: 'none', stroke: darkBorder, 'stroke-width': '3.5' }, gTrunk);
+
+        } else if (style === 'dragon_bonsai') {
+            // ═══════════════════════════════════════════════
+            // 4. DRAGON COILED BONSAI (Muscular Low Curve & Claw Anchor)
+            // ═══════════════════════════════════════════════
+            var dBW = bw * 1.25;
+            var dTW = tw * 1.10;
+            var ptsL = [], ptsR = [];
+
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = dTW + (dBW - dTW) * Math.pow(1 - t, 1.7);
+                var sweep = (Math.sin(t * 1.3 * Math.PI) * 44 - Math.sin(t * 2.8 * Math.PI) * 16) * (1 - Math.pow(t, 2.5));
+                var muscle = Math.sin(t * 7.0) * 3.2;
+
+                var clawL = (t < 0.32) ? dBW * 0.90 * Math.pow((0.32 - t) / 0.32, 1.4) : 0;
+                ptsL.push({ x: rx - currW + sweep - clawL + muscle, y: groundY - t * h });
+                ptsR.push({ x: rx + currW + sweep + muscle, y: groundY - t * h });
+            }
+
+            var dL = 'M' + ptsL[0].x.toFixed(1) + ',' + ptsL[0].y.toFixed(1);
+            ptsL.forEach(function (p, idx) { if (idx > 0) dL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dR = ' L' + ptsR[ptsR.length - 1].x.toFixed(1) + ',' + ptsR[ptsR.length - 1].y.toFixed(1);
+            for (var idx = ptsR.length - 2; idx >= 0; idx--) dR += ' L' + ptsR[idx].x.toFixed(1) + ',' + ptsR[idx].y.toFixed(1);
+
+            // Claw Root Grip Base
+            var pL0 = ptsL[0], pR0 = ptsR[0];
+            var span = pR0.x - pL0.x;
+            var dRoots = ' Q ' + (pR0.x - span * 0.25).toFixed(1) + ' ' + (groundY - 22) + ', ' + (pL0.x + span * 0.52).toFixed(1) + ' ' + (groundY - 8) +
+                        ' Q ' + (pL0.x + span * 0.24).toFixed(1) + ' ' + (groundY - 34) + ', ' + pL0.x.toFixed(1) + ' ' + groundY + ' Z';
+            var d = dL + dR + dRoots;
+
+            mkSVG('path', { d: d, fill: tc, stroke: 'none' }, gTrunk);
+
+            // Mid-tone muscular core
+            var midPtsL = [], midPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = dTW + (dBW - dTW) * Math.pow(1 - t, 1.7);
+                var sweep = (Math.sin(t * 1.3 * Math.PI) * 44 - Math.sin(t * 2.8 * Math.PI) * 16) * (1 - Math.pow(t, 2.5));
+                midPtsL.push({ x: rx - currW * 0.65 + sweep, y: groundY - t * h });
+                midPtsR.push({ x: rx + currW * 0.78 + sweep, y: groundY - t * h });
+            }
+            var dMidL = 'M' + midPtsL[0].x.toFixed(1) + ',' + midPtsL[0].y.toFixed(1);
+            midPtsL.forEach(function (p, idx) { if (idx > 0) dMidL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dMidR = ' L' + midPtsR[midPtsR.length - 1].x.toFixed(1) + ',' + midPtsR[midPtsR.length - 1].y.toFixed(1);
+            for (var idx = midPtsR.length - 2; idx >= 0; idx--) dMidR += ' L' + midPtsR[idx].x.toFixed(1) + ',' + midPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dMidL + dMidR + ' Z', fill: lighter(tc, 0.12), stroke: 'none' }, gTrunk);
+
+            // Highlight sheen
+            var hiPtsL = [], hiPtsR = [];
+            for (var i = 0; i <= steps; i++) {
+                var t = i / steps;
+                var currW = dTW + (dBW - dTW) * Math.pow(1 - t, 1.7);
+                var sweep = (Math.sin(t * 1.3 * Math.PI) * 44 - Math.sin(t * 2.8 * Math.PI) * 16) * (1 - Math.pow(t, 2.5));
+                hiPtsL.push({ x: rx - currW * 0.22 + sweep, y: groundY - t * h });
+                hiPtsR.push({ x: rx + currW * 0.46 + sweep, y: groundY - t * h });
+            }
+            var dHiL = 'M' + hiPtsL[0].x.toFixed(1) + ',' + hiPtsL[0].y.toFixed(1);
+            hiPtsL.forEach(function (p, idx) { if (idx > 0) dHiL += ' L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); });
+            var dHiR = ' L' + hiPtsR[hiPtsR.length - 1].x.toFixed(1) + ',' + hiPtsR[hiPtsR.length - 1].y.toFixed(1);
+            for (var idx = hiPtsR.length - 2; idx >= 0; idx--) dHiR += ' L' + hiPtsR[idx].x.toFixed(1) + ',' + hiPtsR[idx].y.toFixed(1);
+            mkSVG('path', { d: dHiL + dHiR + ' Z', fill: lighter(tc, 0.28), stroke: 'none', opacity: '0.65' }, gTrunk);
+
+            // Bark scales / burls along dragon spine
+            var bX1 = rx + (Math.sin(0.42 * 1.3 * Math.PI) * 44 - Math.sin(0.42 * 2.8 * Math.PI) * 16) * (1 - Math.pow(0.42, 2.5));
+            var bY1 = groundY - h * 0.42;
+            mkSVG('ellipse', { cx: bX1 + 5, cy: bY1, rx: 7, ry: 4.5, fill: darker(tc, 0.4), stroke: darkBorder, 'stroke-width': '1.5' }, gTrunk);
+
+            var bX2 = rx + (Math.sin(0.65 * 1.3 * Math.PI) * 44 - Math.sin(0.65 * 2.8 * Math.PI) * 16) * (1 - Math.pow(0.65, 2.5));
+            var bY2 = groundY - h * 0.65;
+            mkSVG('ellipse', { cx: bX2 - 4, cy: bY2, rx: 6, ry: 4, fill: darker(tc, 0.4), stroke: darkBorder, 'stroke-width': '1.5' }, gTrunk);
+
+            mkSVG('path', { d: dR.replace(' L', 'M'), fill: 'none', stroke: outlineCol, 'stroke-width': '4.5', 'stroke-linecap': 'round' }, gTrunk);
+            mkSVG('path', { d: d, fill: 'none', stroke: darkBorder, 'stroke-width': '3.5' }, gTrunk);
         }
     };
 
     // ═══════════════════════════════════════════════
-    //  BRANCH SEGMENT DRAWING (4 Distinct Styles)
+    //  BRANCH SEGMENT DRAWING (5 Distinct Styles)
     // ═══════════════════════════════════════════════
     FamilyTreeSVG.prototype._drawSeg = function (x1, y1, x2, y2, depth, nid, isP) {
         var g = Math.min(depth, this._BC.length - 1);
@@ -761,6 +989,52 @@
                 'stroke-width': isP ? bw * 0.6 : bw,
                 'stroke-linecap': 'round'
             }, gBr);
+            return;
+        }
+
+        // 2. FLOWING WILLOW TENDRIL (Gentle undulating S-curve with soft braided bark)
+        if (style === 'willow_tendril') {
+            var steps = 10;
+            var dWillow = 'M' + x1 + ',' + y1;
+            for (var i = 1; i <= steps; i++) {
+                var t = i / steps;
+                var lx = x1 + dx * t;
+                var ly = y1 + dy * t;
+                var wave = (Math.sin(t * Math.PI) * 0.75 + Math.sin(t * 2 * Math.PI) * 0.35) * sweep * side;
+                var cx = lx + px * wave;
+                var cy = ly + py * wave;
+                if (cy > ROOT._y + 30) cy = ROOT._y + 30;
+                dWillow += ' L' + cx.toFixed(1) + ',' + cy.toFixed(1);
+            }
+            var baseCol = isP ? 'rgba(214,166,97,0.5)' : this._BC[g];
+            var sw = isP ? bw * 0.6 : bw;
+            mkSVG('path', { d: dWillow, fill: 'none', stroke: darker(baseCol, 0.25), 'stroke-width': sw + 2.0, 'stroke-linecap': 'round' }, gBr);
+            mkSVG('path', { d: dWillow, fill: 'none', stroke: baseCol, 'stroke-width': sw, 'stroke-linecap': 'round' }, gBr);
+            mkSVG('path', { d: dWillow, fill: 'none', stroke: lighter(baseCol, 0.22), 'stroke-width': sw * 0.35, 'stroke-linecap': 'round', opacity: '0.8' }, gBr);
+            mkSVG('circle', { cx: x1, cy: y1, r: Math.max(3, sw * 0.45), fill: baseCol }, gBr);
+            return;
+        }
+
+        // 3. FACETED ZEN BONSAI (Crisp sculpted angular bough deflections)
+        if (style === 'zen_bonsai') {
+            var kneeT = 0.42;
+            var kneeX = x1 + dx * kneeT + px * sweep * side * 1.5;
+            var kneeY = y1 + dy * kneeT + py * sweep * side * 1.5;
+            if (kneeY > ROOT._y + 30) kneeY = ROOT._y + 30;
+
+            var elbowT = 0.75;
+            var elbowX = x1 + dx * elbowT - px * sweep * side * 0.4;
+            var elbowY = y1 + dy * elbowT - py * sweep * side * 0.4;
+            if (elbowY > ROOT._y + 30) elbowY = ROOT._y + 30;
+
+            var dZen = 'M ' + x1 + ',' + y1 + ' L ' + kneeX.toFixed(1) + ',' + kneeY.toFixed(1) + ' L ' + elbowX.toFixed(1) + ',' + elbowY.toFixed(1) + ' L ' + x2 + ',' + y2;
+            var baseCol = isP ? 'rgba(214,166,97,0.5)' : this._BC[g];
+            var sw = isP ? bw * 0.6 : bw;
+            mkSVG('path', { d: dZen, fill: 'none', stroke: darker(baseCol, 0.35), 'stroke-width': sw + 3.0, 'stroke-linecap': 'square', 'stroke-linejoin': 'miter' }, gBr);
+            mkSVG('path', { d: dZen, fill: 'none', stroke: baseCol, 'stroke-width': sw, 'stroke-linecap': 'square', 'stroke-linejoin': 'miter' }, gBr);
+            mkSVG('path', { d: dZen, fill: 'none', stroke: lighter(baseCol, 0.25), 'stroke-width': sw * 0.38, 'stroke-linecap': 'round', opacity: '0.85' }, gBr);
+            mkSVG('circle', { cx: kneeX, cy: kneeY, r: Math.max(2.5, sw * 0.35), fill: darker(baseCol, 0.4) }, gBr);
+            mkSVG('circle', { cx: x1, cy: y1, r: Math.max(3, sw * 0.48), fill: baseCol }, gBr);
             return;
         }
 
@@ -884,6 +1158,42 @@
                 mkSVG('path', { d: 'M 0,' + (-h * 0.22) + ' Q ' + (-w * 0.22) + ',' + (-h * 0.28) + ' ' + (-w * 0.34) + ',' + (-h * 0.20), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
                 mkSVG('path', { d: 'M 0,' + (h * 0.10) + ' Q ' + (w * 0.22) + ',' + (h * 0.04) + ' ' + (w * 0.36) + ',' + (h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
                 mkSVG('path', { d: 'M 0,' + (h * 0.10) + ' Q ' + (-w * 0.22) + ',' + (h * 0.04) + ' ' + (-w * 0.36) + ',' + (h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+            } else if (this._leafStyle === 'ginkgo') {
+                var vg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none', opacity: '0.65' }, g);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.44) + ' L 0,' + (h * 0.35), fill: 'none', stroke: goldCol, 'stroke-width': '1.3', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.38) + ' Q ' + (-w * 0.18) + ',' + (-h * 0.05) + ' ' + (-w * 0.35) + ',' + (h * 0.18), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.38) + ' Q ' + (w * 0.18) + ',' + (-h * 0.05) + ' ' + (w * 0.35) + ',' + (h * 0.18), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.38) + ' Q ' + (-w * 0.10) + ',' + (h * 0.05) + ' ' + (-w * 0.20) + ',' + (h * 0.38), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.38) + ' Q ' + (w * 0.10) + ',' + (h * 0.05) + ' ' + (w * 0.20) + ',' + (h * 0.38), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+            } else if (this._leafStyle === 'maple' || this._leafStyle === 'japanese_maple') {
+                var vg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none', opacity: '0.65' }, g);
+                mkSVG('path', { d: 'M 0,' + (h * 0.23) + ' L 0,' + (-h * 0.48), fill: 'none', stroke: goldCol, 'stroke-width': '1.5', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.23) + ' Q ' + (-w * 0.08) + ',-2 ' + (-w * 0.30) + ',' + (-h * 0.37), fill: 'none', stroke: goldCol, 'stroke-width': '1.2', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.23) + ' Q ' + (w * 0.08) + ',-2 ' + (w * 0.30) + ',' + (-h * 0.37), fill: 'none', stroke: goldCol, 'stroke-width': '1.2', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.23) + ' Q ' + (-w * 0.15) + ',' + (h * 0.06) + ' ' + (-w * 0.47) + ',-2', fill: 'none', stroke: goldCol, 'stroke-width': '1.1', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.23) + ' Q ' + (w * 0.15) + ',' + (h * 0.06) + ' ' + (w * 0.47) + ',-2', fill: 'none', stroke: goldCol, 'stroke-width': '1.1', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.23) + ' Q ' + (-w * 0.19) + ',' + (h * 0.24) + ' ' + (-w * 0.35) + ',' + (h * 0.27), fill: 'none', stroke: goldCol, 'stroke-width': '1.0', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.23) + ' Q ' + (w * 0.19) + ',' + (h * 0.24) + ' ' + (w * 0.35) + ',' + (h * 0.27), fill: 'none', stroke: goldCol, 'stroke-width': '1.0', 'stroke-linecap': 'round' }, vg);
+            } else if (this._leafStyle === 'birch' || this._leafStyle === 'serrated_birch' || this._leafStyle === 'elm') {
+                var vg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none', opacity: '0.65' }, g);
+                mkSVG('path', { d: 'M 0,' + (h * 0.36) + ' L 0,' + (-h * 0.40), fill: 'none', stroke: goldCol, 'stroke-width': '1.4', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.24) + ' Q ' + (-w * 0.12) + ',' + (h * 0.22) + ' ' + (-w * 0.20) + ',' + (h * 0.23), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.24) + ' Q ' + (w * 0.12) + ',' + (h * 0.22) + ' ' + (w * 0.20) + ',' + (h * 0.23), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.13) + ' Q ' + (-w * 0.15) + ',' + (h * 0.10) + ' ' + (-w * 0.27) + ',' + (h * 0.10), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.13) + ' Q ' + (w * 0.15) + ',' + (h * 0.10) + ' ' + (w * 0.27) + ',' + (h * 0.10), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,0 Q ' + (-w * 0.16) + ',-2 ' + (-w * 0.29) + ',0', fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,0 Q ' + (w * 0.16) + ',-2 ' + (w * 0.29) + ',0', fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.11) + ' Q ' + (-w * 0.15) + ',' + (-h * 0.15) + ' ' + (-w * 0.27) + ',' + (-h * 0.09), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (-h * 0.11) + ' Q ' + (w * 0.15) + ',' + (-h * 0.15) + ' ' + (w * 0.27) + ',' + (-h * 0.09), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+            } else if (this._leafStyle === 'linden' || this._leafStyle === 'cordate_linden' || this._leafStyle === 'cordate') {
+                var vg = mkSVG('g', { transform: 'translate(' + cx + ',' + cy + ') rotate(' + ang + ')', 'pointer-events': 'none', opacity: '0.65' }, g);
+                mkSVG('path', { d: 'M 0,' + (h * 0.27) + ' L 0,' + (-h * 0.41), fill: 'none', stroke: goldCol, 'stroke-width': '1.4', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.25) + ' Q ' + (-w * 0.16) + ',' + (h * 0.16) + ' ' + (-w * 0.32) + ',' + (h * 0.08), fill: 'none', stroke: goldCol, 'stroke-width': '1.0', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.25) + ' Q ' + (w * 0.16) + ',' + (h * 0.16) + ' ' + (w * 0.32) + ',' + (h * 0.08), fill: 'none', stroke: goldCol, 'stroke-width': '1.0', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.12) + ' Q ' + (-w * 0.19) + ',0 ' + (-w * 0.29) + ',' + (-h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,' + (h * 0.12) + ' Q ' + (w * 0.19) + ',0 ' + (w * 0.29) + ',' + (-h * 0.14), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,-2 Q ' + (-w * 0.14) + ',' + (-h * 0.15) + ' ' + (-w * 0.20) + ',' + (-h * 0.26), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
+                mkSVG('path', { d: 'M 0,-2 Q ' + (w * 0.14) + ',' + (-h * 0.15) + ' ' + (w * 0.20) + ',' + (-h * 0.26), fill: 'none', stroke: goldCol, 'stroke-width': '0.9', 'stroke-linecap': 'round' }, vg);
             }
         }
 
@@ -1240,10 +1550,12 @@
         this._container.classList.remove('fts-root');
     };
 
-    // Static factory
+    // Static utilities
     FamilyTreeSVG.create = function (container, data, options) {
         return new FamilyTreeSVG(container, data, options);
     };
+    FamilyTreeSVG.leafD = leafD;
+    FamilyTreeSVG.prototype.leafD = leafD;
 
     return FamilyTreeSVG;
 }));

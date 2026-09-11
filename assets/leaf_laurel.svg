@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -105 160 210">
+  <defs>
+    <linearGradient id="leaf_grad_laurel" x1="25%" y1="0%" x2="78%" y2="100%">
+      <stop offset="0%" stop-color="#2d6a36" />
+      <stop offset="50%" stop-color="#1b4a24" />
+      <stop offset="100%" stop-color="#103318" />
+    </linearGradient>
+    <filter id="leaf_shadow_laurel" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  <path d="M 0,-95 C 50.4,-61.75 68.6,-9.5 66.5,28.5 C 63,64.60000000000001 31.5,87.4 0,95 C -31.5,87.4 -63,64.60000000000001 -66.5,28.5 C -68.6,-9.5 -50.4,-61.75 0,-95 Z" fill="url(#leaf_grad_laurel)" stroke="#d6a661" stroke-width="2.5" filter="url(#leaf_shadow_laurel)" />
+  <g opacity="0.8">
+    
+            <path d="M 0,-83.6 L 0,83.6" fill="none" stroke="#eed08f" stroke-width="2.0" stroke-linecap="round" />
+            <path d="M 0,-34.199999999999996 Q 28,-49.4 50.4,-41.8" fill="none" stroke="#eed08f" stroke-width="1.3" stroke-linecap="round" />
+            <path d="M 0,-34.199999999999996 Q -28,-49.4 -50.4,-41.8" fill="none" stroke="#eed08f" stroke-width="1.3" stroke-linecap="round" />
+            <path d="M 0,30.400000000000002 Q 28,15.200000000000001 50.4,26.6" fill="none" stroke="#eed08f" stroke-width="1.3" stroke-linecap="round" />
+            <path d="M 0,30.400000000000002 Q -28,15.200000000000001 -50.4,26.6" fill="none" stroke="#eed08f" stroke-width="1.3" stroke-linecap="round" />
+        
+  </g>
+</svg>

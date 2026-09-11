@@ -126,6 +126,8 @@
                 <button class="c-btn active" onclick="setBranch('woodcut', this)">⭐ Woodcut Sap</button>
                 <button class="c-btn" onclick="setBranch('gnarled', this)">🪵 Gnarled Rustic</button>
                 <button class="c-btn" onclick="setBranch('classic', this)">〰️ Classic Smooth</button>
+                <button class="c-btn" onclick="setBranch('willow_tendril', this)">🌿 Flowing Willow</button>
+                <button class="c-btn" onclick="setBranch('zen_bonsai', this)">📐 Faceted Zen</button>
             </div>
         </div>
 
@@ -133,8 +135,10 @@
         <div class="cp-row">
             <span class="cp-label">Trunk:</span>
             <div class="btn-group" id="bg-trunk">
-                <button class="c-btn active" onclick="setTrunk('calligraphic', this)">⭐ Elegant S-Curve (Original)</button>
-                <button class="c-btn" onclick="setTrunk('gnarled_veteran', this)">🪵 Gnarled Knotted Veteran</button>
+                <button class="c-btn active" onclick="setTrunk('calligraphic', this)">⭐ Elegant S-Curve</button>
+                <button class="c-btn" onclick="setTrunk('gnarled_veteran', this)">🪵 Gnarled Veteran</button>
+                <button class="c-btn" onclick="setTrunk('banyan_cathedral', this)">🏛️ Cathedral Banyan</button>
+                <button class="c-btn" onclick="setTrunk('dragon_bonsai', this)">🐉 Dragon Bonsai</button>
             </div>
         </div>
 
@@ -145,6 +149,10 @@
                 <button class="c-btn active" onclick="setLeaf('laurel', this)">🍃 Classical Laurel</button>
                 <button class="c-btn" onclick="setLeaf('oval', this)">🟢 Imperial Oval</button>
                 <button class="c-btn" onclick="setLeaf('oak', this)">🌳 Royal Oak</button>
+                <button class="c-btn" onclick="setLeaf('ginkgo', this)">🪭 Majestic Ginkgo</button>
+                <button class="c-btn" onclick="setLeaf('maple', this)">🍁 Japanese Maple</button>
+                <button class="c-btn" onclick="setLeaf('birch', this)">🍃 Serrated Birch</button>
+                <button class="c-btn" onclick="setLeaf('linden', this)">💚 Cordate Linden</button>
             </div>
         </div>
 
@@ -275,21 +283,60 @@
           ]
         };
 
+        var initBranch = 'woodcut';
+        var initTrunk = 'calligraphic';
+        var initLeaf = 'laurel';
+        var initMode = 'svg';
+
+        try {
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('branch')) initBranch = urlParams.get('branch');
+            if (urlParams.get('trunk')) initTrunk = urlParams.get('trunk');
+            if (urlParams.get('leaf')) initLeaf = urlParams.get('leaf');
+            if (urlParams.get('mode')) initMode = urlParams.get('mode');
+        } catch (e) {}
+
         // Initialize with default rich styles
         var tree = FamilyTreeSVG.create('#tree', familyData, {
             leafColor: '#17361a',
             branchColor: '#3a1f13',
             trunkColor: '#2d1607',
-            branchStyle: 'woodcut',
-            trunkStyle: 'calligraphic',
-            leafStyle: 'laurel',
-            leafRenderMode: 'svg',
+            branchStyle: initBranch,
+            trunkStyle: initTrunk,
+            leafStyle: initLeaf,
+            leafRenderMode: initMode,
             leafPngUrls: {
                 laurel: '../assets/leaf_laurel.png',
                 oval: '../assets/leaf_oval.png',
-                oak: '../assets/leaf_oak.png'
+                oak: '../assets/leaf_oak.png',
+                ginkgo: '../assets/leaf_ginkgo.png',
+                maple: '../assets/leaf_maple.png',
+                birch: '../assets/leaf_birch.png',
+                linden: '../assets/leaf_linden.png'
             }
         });
+
+        // Sync active button states with initial configuration
+        if (initBranch !== 'woodcut') {
+            document.querySelectorAll('#bg-branch .c-btn').forEach(function(b) {
+                b.classList.toggle('active', b.getAttribute('onclick').indexOf("'" + initBranch + "'") !== -1);
+            });
+        }
+        if (initTrunk !== 'calligraphic') {
+            document.querySelectorAll('#bg-trunk .c-btn').forEach(function(b) {
+                b.classList.toggle('active', b.getAttribute('onclick').indexOf("'" + initTrunk + "'") !== -1);
+            });
+        }
+        if (initLeaf !== 'laurel') {
+            document.querySelectorAll('#bg-leaf .c-btn').forEach(function(b) {
+                b.classList.toggle('active', b.getAttribute('onclick').indexOf("'" + initLeaf + "'") !== -1);
+            });
+        }
+        if (initMode !== 'svg') {
+            document.querySelectorAll('#bg-mode .c-btn').forEach(function(b) {
+                b.classList.toggle('active', b.getAttribute('onclick').indexOf("'" + initMode + "'") !== -1);
+            });
+        }
 
         function setBranch(style, btn) {
             tree.setBranchStyle(style);

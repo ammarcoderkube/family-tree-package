@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -105 160 210">
+  <defs>
+    <linearGradient id="leaf_grad_oval" x1="25%" y1="0%" x2="78%" y2="100%">
+      <stop offset="0%" stop-color="#2d6a36" />
+      <stop offset="50%" stop-color="#1b4a24" />
+      <stop offset="100%" stop-color="#103318" />
+    </linearGradient>
+    <filter id="leaf_shadow_oval" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  <path d="M 0,-95 C 38.5,-95 70,-52.25000000000001 70,0 C 70,52.25000000000001 38.5,95 0,95 C -38.5,95 -70,52.25000000000001 -70,0 C -70,-52.25000000000001 -38.5,-95 0,-95 Z" fill="url(#leaf_grad_oval)" stroke="#d6a661" stroke-width="2.5" filter="url(#leaf_shadow_oval)" />
+  <g opacity="0.8">
+    
+            <ellipse cx="0" cy="0" rx="53.2" ry="76" fill="none" stroke="#eed08f" stroke-width="1.5" stroke-dasharray="5 3.5" />
+        
+  </g>
+</svg>
